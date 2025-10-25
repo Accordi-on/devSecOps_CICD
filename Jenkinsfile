@@ -14,7 +14,7 @@ pipeline {
 
         stage('Git clone') {
             steps {
-                echo '📥 [Git clone] Cloning source code from repository...'
+                echo '📥 [Git clone] Cloning source code from repository....'
             }
         }
 
