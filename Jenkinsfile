@@ -11,11 +11,6 @@ pipeline {
 
     stages {
 
-        stage('Tool Install') {
-            steps {
-                echo '🔧 [Tool Install] Preparing build tools (docker, helm, argocd, etc.)'
-            }
-        }
 
         stage('Git clone') {
             steps {
