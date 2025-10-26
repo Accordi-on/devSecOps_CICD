@@ -119,6 +119,8 @@ spec:
           mountPath: /kaniko/.docker
         - name: system-ca
           mountPath: /etc/ssl/certs
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent
       resources:
         requests:
           cpu: "200m"
@@ -135,6 +137,8 @@ spec:
     - name: system-ca
       configMap:
         name: system-ca
+
+      
 """     }
             }
             environment {
