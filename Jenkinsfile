@@ -31,8 +31,8 @@ pipeline {
                 echo "🌿 [Checkout] Checking out branch ${env.BRANCH_NAME}..."
                 dir("${APP_NAME}") {
                     sh """
-                        git fetch origin ${BRANCH_NAME}
                         git checkout ${BRANCH_NAME}
+                        git fetch origin ${BRANCH_NAME}
                     """
                 }
             }
