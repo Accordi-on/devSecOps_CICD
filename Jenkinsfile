@@ -119,6 +119,8 @@ spec:
           mountPath: /kaniko/.docker
         - name: system-ca
           mountPath: /etc/ssl/certs
+        - name: workspace-volume
+          mountPath: /workspace
       resources:
         requests:
           cpu: "200m"
@@ -135,6 +137,10 @@ spec:
     - name: system-ca
       configMap:
         name: system-ca
+    - name: workspace-volume
+      hostPath:
+        path: /host/jenkins/agent/workspace/${env.JOB_NAME}
+        type: Directory
 """     }
             }
             environment {
@@ -149,7 +155,7 @@ spec:
                     sh 'ls -R / && ls -R /workspace || true && ls -R /home/jenkins || true'
                     sh '''
                         /kaniko/executor \
-                            --context ${WORKSPACE}/${APP_NAME} \
+                            --context workspace/${APP_NAME} \
                             --dockerfile Dockerfile \
                             --no-push \
                             --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
