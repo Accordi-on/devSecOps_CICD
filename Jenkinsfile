@@ -40,17 +40,21 @@ pipeline {
                 }
             }
         }
+
         stage('Build Test') {
+            agent {
+                docker {
+                    image 'node:20'
+                    args '-u 0'
+                }
+            }
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
-                    sh '''
-                        set -e
-                        apt-get update
-                        apt-get install -y --no-install-recommends libatomic1
-                    '''
                 dir("${APP_NAME}") {
-                    sh 'npm ci'
-                    sh 'npm test'
+                    sh '''
+                        npm ci
+                        npm test
+                    '''
                 }
             }
         }
