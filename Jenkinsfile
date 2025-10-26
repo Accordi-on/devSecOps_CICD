@@ -26,8 +26,8 @@ pipeline {
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
                 """
-                WORKSPACE="$(pwd)/${APP_NAME}"
-                echo "🌍 [Workspace] Workspace is located at ${WORKSPACE}."
+                env.WORKSPACE = "${pwd()}/${APP_NAME}"
+                echo "🌍 [Workspace] Workspace is located at ${env.WORKSPACE}."
 
             }
         }
