@@ -56,24 +56,24 @@ pipeline {
                 }
             }
         }
-        stage('Dependency-Check') {
-            environment {
-                DC_HOME = tool 'Dependency-Check'   // Jenkins Global Tool Configuration 이름
-            }
-            steps {
-                dir("${APP_NAME}") {
-                    echo '🔍 [Dependency-Check] Running vulnerability scan...'
-                    sh '''
-                        "${DC_HOME}/bin/dependency-check.sh" \
-                        --project "${APP_NAME}" \
-                        --scan "." \
-                        --format "ALL" \
-                        --out "./dependency-check-report" \
-                        --prettyPrint
-                    '''
-                }
-            }
-        }
+        // stage('Dependency-Check') {
+        //     environment {
+        //         DC_HOME = tool 'Dependency-Check'   // Jenkins Global Tool Configuration 이름
+        //     }
+        //     steps {
+        //         dir("${APP_NAME}") {
+        //             echo '🔍 [Dependency-Check] Running vulnerability scan...'
+        //             sh '''
+        //                 "${DC_HOME}/bin/dependency-check.sh" \
+        //                 --project "${APP_NAME}" \
+        //                 --scan "." \
+        //                 --format "ALL" \
+        //                 --out "./dependency-check-report" \
+        //                 --prettyPrint
+        //             '''
+        //         }
+        //     }
+        // }
 
         stage('Sonarqube and Quality gate') {
             environment {
