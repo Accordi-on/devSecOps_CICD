@@ -12,6 +12,7 @@ pipeline {
             BRANCH_NAME     = "main"
             GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${env.JOB_NAME}.git"
             GIT_CREDENTIALS = "gitea-token"
+            SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
             IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
@@ -53,36 +54,40 @@ pipeline {
                 }
             }
         }
-        stage('Dependency-Check') {
-            agent {
-                docker{
-                    image 'owasp/dependency-check:latest'
-                     args '-u 0:0'
-                }
-            }
-            steps {
-                dir("${APP_NAME}") {
-                    sh '''
-                        /usr/share/dependency-check/bin/dependency-check.sh \
-                            --project "${APP_NAME}" \
-                            --scan "./" \
-                            --format "XML" \
-                            --out "./"
-                    '''
-                }
-                dependencyCheckPublisher pattern: "${APP_NAME}/dependency-check-report.xml"
-            }
-        }
+        // stage('Dependency-Check') {
+        //     steps {
+        //         dir("${APP_NAME}") {
+        //             dependencyCheck additionalArguments: ''' 
+        //                 -o "./" 
+        //                 -s "./"
+        //                 -f "ALL" 
+        //                 --prettyPrint''', odcInstallation: 'Dependency-Check'
+        //             dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+        //         }
+        //     }
+        // }
 
         stage('Sonarqube and Quality gate') {
             steps {
                 echo '📊 [SonarQube] Running code analysis and sending results...'
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                    sh '''
+                        sonar-scanner \
+                            -Dsonar.projectKey=test \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=https://sonarqube.accordi-on.kro.kr \
+                            -Dsonar.login=$SONAR_AUTH_TOKEN
+                    '''
+                }
             }
         }
 
         stage('Quality Gate Check') {
             steps {
                 echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
+                timeout(time: 3, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
 
