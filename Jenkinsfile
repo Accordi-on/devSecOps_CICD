@@ -106,16 +106,16 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-containers:
-- name: kaniko
+  containers:
+  - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
     command: ["/busybox/sh"]
     tty: true
     volumeMounts:
     - name: work
-    mountPath: /workspace
-volumes:
-- name: work
+      mountPath: /workspace
+  volumes:
+  - name: work
     emptyDir: {}
             """
                 }
@@ -159,16 +159,16 @@ volumes:
 apiVersion: v1
 kind: Pod
 spec:
-  containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
+containers:
+- name: crane
+    image: gcr.io/go-containerregistry/crane:debug
     command: ["/busybox/sh"]
     tty: true
     volumeMounts:
     - name: work
-      mountPath: /workspace
-  volumes:
-  - name: work
+        mountPath: /workspace
+volumes:
+- name: work
     emptyDir: {}
 """
                 }
