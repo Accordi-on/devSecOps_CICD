@@ -137,7 +137,7 @@ spec:
             }
             environment {
                 REGISTRY = "${HARBOR_REGISTRY}"
-                PROJECT  = "${HARBOR_PROJECT}"
+                PROJECT  = "${APP_NAME}"
                 IMAGE    = "${APP_NAME}"
                 TAG      = "${IMAGE_TAG}"
             }
@@ -145,11 +145,12 @@ spec:
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh '''
-                    /kaniko/executor \
-                        --context ./${APP_NAME} \
-                        --dockerfile Dockerfile \
-                        --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
-                        --tarPath /workspace/image.tar                   
+                        /kaniko/executor \
+                            --context . \
+                            --dockerfile Dockerfile \
+                            --no-push \
+                            --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
+                            --tarPath /workspace/image.tar        
                     '''
 
                     echo "✅ [Docker Build] Image build complete."
