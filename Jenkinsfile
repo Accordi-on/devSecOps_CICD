@@ -1,12 +1,14 @@
 pipeline {
     agent any
     tools {
-        nodejs "nodejs"
-        sonarQubeScanner 'SonarQubeScanner'
+        nodejs 'nodejs'                        // 너 이미 쓰던 Node.js 설치명
+        sonarRunner 'SonarQubeScanner'         // <-- 여기 중요
     }
+
     options {
         skipDefaultCheckout(true)
     }
+
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "main"
@@ -73,10 +75,10 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
                         sonar-scanner \
-                            -Dsonar.projectKey=test \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=$SONAR_HOST_URL \
-                            -Dsonar.login=$SONAR_AUTH_TOKEN
+                          -Dsonar.projectKey=test \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
