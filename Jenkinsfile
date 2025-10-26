@@ -110,15 +110,20 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-containers:
-- name: kaniko
+  containers:
+  - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
-    command: ["/busybox/sh", "-c", "echo 'kaniko ready'; sleep 36000"]
+    command:
+    - /busybox/sh
+    args:
+    - -c
+    - |
+      echo "kaniko ready"; sleep 36000
     volumeMounts:
     - name: work
-    mountPath: /workspace
-volumes:
-- name: work
+      mountPath: /workspace
+  volumes:
+  - name: work
     emptyDir: {}
         """
                 }
