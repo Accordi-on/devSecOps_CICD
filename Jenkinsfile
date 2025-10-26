@@ -26,9 +26,11 @@ pipeline {
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
                 """
-                env.WORKSPACE = "${pwd()}/${APP_NAME}"
-                echo "🌍 [Workspace] Workspace is located at ${env.WORKSPACE}."
-
+                script {
+                    // ✅ Groovy 문법은 반드시 script 블록 안에서 써야 함
+                    env.WORKSPACE = "${pwd()}/${APP_NAME}"
+                    echo "🌍 [Workspace] Workspace is located at ${env.WORKSPACE}."
+                }
             }
         }
         stage('Checkout Branch') {
