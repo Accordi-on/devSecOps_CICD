@@ -98,71 +98,115 @@ pipeline {
         }
 
         stage('Docker image build') {
+            agent {
+                kubernetes {
+                    label 'kaniko-build-agent'
+                    defaultContainer 'kaniko'
+                    yaml """
+        apiVersion: v1
+        kind: Pod
+        spec:
+        containers:
+        - name: kaniko
+            image: gcr.io/kaniko-project/executor:latest
+            command: ["/busybox/sh"]
+            tty: true
+            volumeMounts:
+            - name: work
+            mountPath: /workspace
+        volumes:
+        - name: work
+            emptyDir: {}
+        """
+                }
+            }
+
+            environment {
+                IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
+            }
+
             steps {
-                echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG}..."
+                echo "🐳 [Docker Build] Building image for ${IMAGE_FULL} (no push yet)..."
+
+                container('kaniko') {
+                    sh """
+                        # Kaniko build -> tar export
+                        /kaniko/executor \
+                        --dockerfile=Dockerfile \
+                        --context=${WORKSPACE} \
+                        --no-push \
+                        --tarPath /workspace/image.tar
+
+                        ls -lh /workspace
+                        echo '✅ Build complete, image.tar prepared'
+                    """
+
+                    // tar 파일을 워크스페이스로 복사해서 다음 stage에서도 접근 가능하게
+                    sh "cp /workspace/image.tar ${WORKSPACE}/image.tar"
+                }
+
+                // Jenkins 아티팩트로도 저장해두면, 이후 stage가 다른 agent여도 받을 수 있음
+                archiveArtifacts artifacts: 'image.tar', fingerprint: true
             }
         }
 
         stage('Docker image push to Harbor') {
             agent {
                 kubernetes {
+                    label 'crane-push-agent'
+                    defaultContainer 'crane'
                     yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-labels:
-    job: kaniko-build
-spec:
-containers:
-    - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    command: ['cat']
-    tty: true
-    volumeMounts:
-        - name: docker-config
-        mountPath: /kaniko/.docker
-volumes:
-    - name: docker-config
-    emptyDir: {}
-            """
+        apiVersion: v1
+        kind: Pod
+        spec:
+        containers:
+        - name: crane
+            image: gcr.io/go-containerregistry/crane:debug
+            command: ["/busybox/sh"]
+            tty: true
+            volumeMounts:
+            - name: work
+            mountPath: /workspace
+        volumes:
+        - name: work
+            emptyDir: {}
+        """
                 }
-                }
+            }
             environment {
                 IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                 REGISTRY   = "${HARBOR_REGISTRY}"
             }
             steps {
-                echo "📤 [Image Push] Pushing image to Harbor registry ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}..."
-                container('kaniko'){
-                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USERNAME', passwordVariable: 'HARBOR_PASSWORD')]) {
-                    sh """
-                        echo '🔐 [Kaniko] Creating auth config for Harbor...'
+                echo "📤 [Image Push] Pushing image.tar to ${IMAGE_FULL} ..."
 
-                        AUTH_B64=\$(echo -n "\${HARBOR_USERNAME}:\${HARBOR_PASSWORD}" | base64)
+                // 아까 build 단계에서 archiveArtifacts 한 걸 복구
+                unstashOrUnarchive('image.tar')
+                container('crane') {
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'harbor-credentials',
+                            usernameVariable: 'HARBOR_USERNAME',
+                            passwordVariable: 'HARBOR_PASSWORD'
+                        )
+                    ]) {
+                        sh """
+                            ls -lh .
 
-                        cat > /kaniko/.docker/config.json <<EOF
-                        {
-                        "auths": {
-                            "${REGISTRY}": {
-                            "auth": "\${AUTH_B64}"
-                            }
-                        }
-                        }
-                        EOF
+                            echo '🔐 Logging in to Harbor registry...'
 
-                        echo '🏗 [Kaniko] Building and pushing ${IMAGE_FULL} ...'
+                            # crane auth 는 env변수를 받거나 --auth 기본 옵션 사용 가능
+                            # 여기서는 간단히 crane push 에 직접 전달
+                            echo '🚚 Pushing...'
+                            crane push image.tar ${IMAGE_FULL} --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
 
-                        /kaniko/executor \
-                        --dockerfile=Dockerfile \
-                        --context=${WORKSPACE} \
-                        --destination=${IMAGE_FULL} \
-                        --cleanup
+                            # latest 태그도 밀고 싶으면 한 번 더
+                            crane push image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
 
-                        echo '✅ [Kaniko] Image pushed: ${IMAGE_FULL}'
-                    """
+                            echo '✅ Push complete: ${IMAGE_FULL}'
+                        """
                     }
                 }
-                
             }
         }
 
