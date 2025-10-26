@@ -19,12 +19,10 @@ pipeline {
         stage('Git Clone') {
             steps {
                 echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
-                withCredentials([string(credentialsId: "${env.GIT_CREDENTIALS}", variable: 'TOKEN')]) {
-                    sh """
-                        rm -rf repo || true
-                        git clone https://Accordi-on:${TOKEN}@gitea.accordi-on.kro.kr/Accordi-on/${JOB_NAME}.git repo
-                    """
-                }
+                sh '''
+                git clone ${GIT_URL}
+                '''
+
             }
         }
         stage('Checkout Branch') {
