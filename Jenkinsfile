@@ -99,7 +99,7 @@ pipeline {
 
         stage('Docker image build') {
             steps {
-                DOCKER_IMAGE = docker.build registry
+                DOCKER_IMAGE = docker.build("${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}")
             }
         }
 
