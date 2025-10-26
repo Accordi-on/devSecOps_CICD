@@ -1,45 +1,5 @@
 pipeline {
-    agent {
-        kubernetes {
-            label 'kaniko-agent'
-            yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
-      command:
-        - cat
-      tty: true
-      volumeMounts:
-        - name: kaniko-docker-config
-          mountPath: /kaniko/.docker
-        - name: system-ca
-          mountPath: /etc/ssl/certs
-      resources:
-        requests:
-          cpu: "200m"
-          memory: "512Mi"
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      volumeMounts:
-        - name: system-ca
-          mountPath: /etc/ssl/certs
-  volumes:
-    - name: kaniko-docker-config
-      projected:
-        sources:
-          - secret:
-              name: harbor-dockerconfig
-              items:
-                - key: .dockerconfigjson
-                  path: config.json
-    - name: system-ca
-      configMap:
-        name: system-ca
-"""     }
-    }
+    agent any
     tools {
         nodejs 'nodejs'
     }
@@ -137,6 +97,53 @@ spec:
         }
 
         stage('Docker image build') {
+            agent {
+                kubernetes {
+                    label 'kaniko-agent'
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      command:
+        - cat
+      tty: true
+      volumeMounts:
+        - name: kaniko-docker-config
+          mountPath: /kaniko/.docker
+        - name: system-ca
+          mountPath: /etc/ssl/certs
+      resources:
+        requests:
+          cpu: "200m"
+          memory: "512Mi"
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      volumeMounts:
+        - name: system-ca
+          mountPath: /etc/ssl/certs
+  volumes:
+    - name: kaniko-docker-config
+      projected:
+        sources:
+          - secret:
+              name: harbor-dockerconfig
+              items:
+                - key: .dockerconfigjson
+                  path: config.json
+    - name: system-ca
+      configMap:
+        name: system-ca
+"""     }
+            }
+            environment {
+                REGISTRY = "${HARBOR_REGISTRY}"
+                PROJECT  = "${HARBOR_PROJECT}"
+                IMAGE    = "${APP_NAME}"
+                TAG      = "${IMAGE_TAG}"
+            }
             steps {
                 container('kaniko') {
                     sh '''
