@@ -137,7 +137,10 @@ spec:
     - name: system-ca
       configMap:
         name: system-ca
-
+    - name: workspace-volume
+      hostPath:
+        path: /host/jenkins/agent
+        type: Directory
       
 """     }
             }
