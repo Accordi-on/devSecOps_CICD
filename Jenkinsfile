@@ -18,7 +18,8 @@ pipeline {
                     sh '''
                     #!/bin/bash
                     set -e
-                    echo "${GIT_URL} ${JOB_NAME}"
+                    git clone ${GIT_URL} ${JOB_NAME}
+                    rm -rf ${JOB_NAME}/
                     echo "✅ Repository cloned into $(pwd)"
                     
                     '''
