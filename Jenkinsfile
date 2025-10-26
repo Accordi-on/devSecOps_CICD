@@ -52,10 +52,28 @@ pipeline {
                 }
             }
         }
-
-        stage('Dependency-Check Analysis') {
+        stage('Dependency-Check') {
             steps {
-                echo '🔍 [Dependency-Check] Analyzing dependency vulnerabilities...'
+                echo '🔍 [Dependency-Check] Running vulnerability analysis...'
+                dir("${APP_NAME}") {
+                    dependencyCheck (
+                        additionalArguments: '''
+                            --scan "./"
+                            --out "./"
+                            --format "ALL"
+                            --project "MyApp"
+                            --prettyPrint
+                        ''',
+                        odcInstallation: 'OWASP-DepCheck-10'
+                    )
+
+                    dependencyCheckPublisher(
+                        pattern: 'dependency-check-report.xml',
+                        failedTotalHigh: 1,
+                        unstableTotalMedium: 10,
+                        stopBuild: true
+                    )
+                }
             }
         }
 
