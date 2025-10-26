@@ -4,13 +4,15 @@ pipeline {
         skipDefaultCheckout(true)
     }
     environment {
-            // === 기본 환경 변수 (나중에 실제 값으로 덮어쓸 수 있음) ===
-            JOB_NAME        = "${env.JOB_NAME}" // jenkins가 넣어줌
+            JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "main"
-
-            // 소스 저장소
-            GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${JOB_NAME}.git"
+            GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${env.JOB_NAME}.git"
             GIT_CREDENTIALS = "gitea-token"
+            APP_NAME        = "${env.JOB_NAME}"
+            IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
+            HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
+            HARBOR_PROJECT  = "demo-project"
+            ARGOCD_APP      = "${env.JOB_NAME}"
 
     }
     stages {
@@ -24,7 +26,7 @@ pipeline {
                 echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
             }
         }
-        
+
         stage('Build Test') {
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
