@@ -70,15 +70,14 @@ pipeline {
         // }
 
         stage('Sonarqube and Quality gate') {
+            environment {
+                SCANNER_HOME = tool 'SonarQubeScanner'
+            }
             steps {
                 echo '📊 [SonarQube] Running code analysis and sending results...'
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        sonar-scanner \
-                          -Dsonar.projectKey=test \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.login=$SONAR_AUTH_TOKEN
+                        sh "${SCANNER_HOME}/bin/sonar-scanner"
                     '''
                 }
             }
