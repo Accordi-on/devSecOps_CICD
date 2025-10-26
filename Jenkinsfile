@@ -15,8 +15,6 @@ pipeline {
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "demo-project"
             ARGOCD_APP      = "${env.JOB_NAME}"
-            WORKSPACE = ""
-
     }
     stages {
         stage('Git Clone') {
@@ -26,11 +24,6 @@ pipeline {
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
                 """
-                script {
-                    // ✅ Groovy 문법은 반드시 script 블록 안에서 써야 함
-                    env.WORKSPACE = "${pwd()}/${APP_NAME}"
-                    echo "🌍 [Workspace] Workspace is located at ${env.WORKSPACE}."
-                }
             }
         }
         stage('Checkout Branch') {
@@ -153,7 +146,7 @@ spec:
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh '''
                     /kaniko/executor \
-                        --context ${APP_NAME} \
+                        --context ./${APP_NAME} \
                         --dockerfile Dockerfile \
                         --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
                         --tarPath /workspace/image.tar                   
