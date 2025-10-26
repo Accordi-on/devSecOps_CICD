@@ -96,15 +96,14 @@ pipeline {
             }
         }
 
-        stage('Docker image build') {}
+        stage('Docker image build') {
             steps {
                 dockerBuildAndStashImage(
-                    dockerfilePath: "${APP_NAME}/Dockerfile",
-                    contextPath: "${APP_NAME}/",
+                    appName: "${APP_NAME}",
                     imageTag: "${IMAGE_TAG}",
-                    stashName: "image.tar",
-                    buildArgs: ""
-                )   
+                    dockerfilePath: "${APP_NAME}/Dockerfile",
+                    contextPath: "${APP_NAME}/"
+                )
             }
         }
 
