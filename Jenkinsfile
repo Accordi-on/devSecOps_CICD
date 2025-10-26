@@ -143,8 +143,8 @@ spec:
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh """
-                    /kaniko/executor --context=dir:///workspace/${APP_NAME}/ --dockerfile=/workspace/${APP_NAME}/Dockerfile --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} --destination=${REGISTRY}/${PROJECT}/${IMAGE}:latest --tarPath=/workspace/image.tar
-                                        """
+                    echo "sh test"
+                    """
                     echo "✅ [Docker Build] Image build complete."
                     stash name: 'image.tar', includes: 'image.tar'
                 }
