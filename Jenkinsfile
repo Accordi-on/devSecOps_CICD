@@ -14,7 +14,14 @@ pipeline {
 
         stage('Git clone') {
             steps {
-                echo '📥 [Git clone] Cloning source code from repository....'
+                echo "📥 [Git clone] Cloning source from ${GIT_URL} ..."
+                    sh '''
+                    #!/bin/bash
+                    set -e
+                    echo "${GIT_URL} ${JOB_NAME}"
+                    echo "✅ Repository cloned into $(pwd)"
+                    
+                    '''
             }
         }
 
