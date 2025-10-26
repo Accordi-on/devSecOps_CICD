@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    tools {
+        nodejs "nodejs"
+    }
     options {
         skipDefaultCheckout(true)
     }
@@ -40,6 +43,10 @@ pipeline {
         stage('Build Test') {
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
+                dir("${APP_NAME}") {
+                    sh 'npm install'
+                    sh 'npm test'
+                }
             }
         }
 
