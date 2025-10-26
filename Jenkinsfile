@@ -146,11 +146,13 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
-
+                    sh '''
+                    ls -al /workspace/${APP_NAME}
+                    '''
                     sh '''
                     /kaniko/executor \
-                        --context /workspace/${APP_NAME} \
-                        --dockerfile /workspace/${APP_NAME}/Dockerfile \
+                        --context ${APP_NAME} \
+                        --dockerfile Dockerfile \
                         --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
                         --tarPath /workspace/image.tar                   
                     '''
