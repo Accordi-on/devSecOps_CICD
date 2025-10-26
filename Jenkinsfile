@@ -42,12 +42,19 @@ pipeline {
         }
 
         stage('Build Test') {
+            agent{
+                docker {
+                    image 'node:25-alpine'
+                    args '-u root:root'
+                }
+            }
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                     nodejs('nodejs') {
                         sh '''
-                            yarn install && yarn run test
+                            npm ci
+                            npm test
                         '''
                     }
                 }
