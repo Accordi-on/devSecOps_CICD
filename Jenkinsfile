@@ -19,11 +19,17 @@ pipeline {
         stage('Git Clone') {
             steps {
                 echo "🌐 [Git Clone] Cloning repository from ${GIT_URL}..."
+                git branch: "${BRANCH_NAME}",
+                    credentialsId: "${GIT_CREDENTIALS}",
+                    url: "${GIT_URL}"
             }
         }
         stage('Checkout Branch') {
             steps {
                 echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
+                checkout([$class: 'GitSCM',
+                          branches: [[name: "refs/heads/${BRANCH_NAME}"]],
+                          userRemoteConfigs: [[url: "${GIT_URL}", credentialsId: "${GIT_CREDENTIALS}"]]])
             }
         }
 
