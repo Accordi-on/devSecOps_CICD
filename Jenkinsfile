@@ -59,7 +59,7 @@ pipeline {
                         -o "./" 
                         -s "./"
                         -f "ALL" 
-                        --prettyPrint''', odcInstallation: 'OWASP-DepCheck-10'
+                        --prettyPrint''', odcInstallation: 'Dependency-Check'
                     
                     // 💡 디버깅 1: 실행 후 파일 목록 확인
                     sh 'ls -al dependency-check-report.xml || echo "Report file not found!"'
