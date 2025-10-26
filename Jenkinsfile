@@ -150,7 +150,7 @@ spec:
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh '''
                         /kaniko/executor \
-                            --context ${WORKSPACE} \
+                            --context ${WORKSPACE}/${APP_NAME} \
                             --dockerfile Dockerfile \
                             --no-push \
                             --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
