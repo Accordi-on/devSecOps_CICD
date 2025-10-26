@@ -146,7 +146,9 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
-                    sh "echo testing kaniko setup"
+                    sh '''
+                        echo "kaniko Seup Test"                     
+                    '''
 
                     echo "✅ [Docker Build] Image build complete."
                     stash name: 'image.tar', includes: 'image.tar'
