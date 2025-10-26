@@ -104,7 +104,7 @@ pipeline {
             }
             agent {
                 kubernetes {
-                    label 'kaniko-build-agent'
+                    label 'kaniko-agent'
                     defaultContainer 'kaniko'
                     yaml """
 apiVersion: v1
@@ -112,27 +112,38 @@ kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
-    command:
-    - /busybox/sh
-    args:
-    - -c
-    - |
-      echo "kaniko ready"; sleep 36000
+    image: gcr.io/kaniko-project/executor:latest # debug → latest 로 변경
+    command: ["/busybox/sh"]
+    tty: true
     volumeMounts:
-    - name: work
-      mountPath: /workspace
+    - name: kaniko-docker-config
+      mountPath: /kaniko/.docker
+    - name: system-ca
+      mountPath: /etc/ssl/certs
   volumes:
-  - name: work
-    emptyDir: {}
-        """
+  - name: kaniko-docker-config
+    projected:
+    sources:
+      - secret:
+        name: harbor-dockerconfig
+        items:
+        - key: .dockerconfigjson
+          path: config.json
+  - name: system-ca
+    configMap:
+    name: system-ca
+"""
                 }
             }
             steps {
                 container('kaniko') {
                     sh '''
                         echo "🏗 building with kaniko..."
-                        /kaniko/executor --dockerfile=Dockerfile --context=${WORKSPACE} --no-push --tar-path /workspace/image.tar
+                        /kaniko/executor \
+                        --dockerfile=Dockerfile \
+                        --context=${WORKSPACE} \
+                        --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
+                        --cache=true
                     '''
                 }
             }
