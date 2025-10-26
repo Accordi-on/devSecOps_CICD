@@ -20,8 +20,8 @@ pipeline {
             steps {
                 echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
                 sh """
-                    git clone ${GIT_URL}
-                
+                    rm -rf ${APP_NAME} || true
+                    git clone ${GIT_URL} ${APP_NAME}
                 """
 
             }
@@ -29,7 +29,7 @@ pipeline {
         stage('Checkout Branch') {
             steps {
                 echo "🌿 [Checkout] Checking out branch ${env.BRANCH_NAME}..."
-                dir('repo') {
+                dir("${APP_NAME}") {
                     sh """
                         git fetch origin ${BRANCH_NAME}
                         git checkout ${BRANCH_NAME}
