@@ -1,14 +1,9 @@
 pipeline {
     agent any
-
-    environment {
-        APP_NAME         = 'my-service'
-        IMAGE_TAG        = "${env.BUILD_NUMBER}"
-        HARBOR_REGISTRY  = 'harbor.accordi-on.kro.kr'
-        HARBOR_PROJECT   = 'my-project'
-        ARGOCD_APP       = 'my-service-app'
+    
+    options {
+        skipDefaultCheckout(true)
     }
-
     stages {
 
 
