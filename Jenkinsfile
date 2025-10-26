@@ -110,7 +110,7 @@ spec:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
       command:
-        - /busybox/sleep
+        - sleep
       args:
         - infinity
       tty: true
@@ -152,7 +152,7 @@ spec:
                         --context ${WORKSPACE}/${APP_NAME} \
                         --dockerfile ${WORKSPACE}/${APP_NAME}/Dockerfile \
                         --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
-                        --tarPath /workspace/image.tar \                   
+                        --tarPath /workspace/image.tar                   
                     '''
 
                     echo "✅ [Docker Build] Image build complete."
