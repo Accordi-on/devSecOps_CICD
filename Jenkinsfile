@@ -147,9 +147,6 @@ spec:
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh '''
-                    ls -al /workspace/${APP_NAME}
-                    '''
-                    sh '''
                     /kaniko/executor \
                         --context ${APP_NAME} \
                         --dockerfile Dockerfile \
