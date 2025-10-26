@@ -23,6 +23,7 @@ pipeline {
                 sh """
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
+                    echo "pwd: $(pwd)"
                 """
             }
         }
