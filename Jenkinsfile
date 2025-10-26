@@ -111,6 +111,7 @@ spec:
         - /busybox/sh
       args:
         - -c
+        - sleep infinity
       tty: true
       volumeMounts:
         - name: kaniko-docker-config
