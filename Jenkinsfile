@@ -142,9 +142,9 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
-                    sh """
+                    sh '''
                     echo "sh test"
-                    """
+                    '''
                     echo "✅ [Docker Build] Image build complete."
                     stash name: 'image.tar', includes: 'image.tar'
                 }
