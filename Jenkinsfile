@@ -43,15 +43,13 @@ pipeline {
 
         stage('Build Test') {
             steps {
-                sh '''
-                apt-get update && apt-get install -y --no-install-recommends libatomic1
-                '''
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
-                    sh '''
-                        npm ci
-                        npm test
-                    '''
+                    nodejs('nodejs') {
+                        sh '''
+                            yarn install && yarn run test
+                        '''
+                    }
                 }
             }
         }
