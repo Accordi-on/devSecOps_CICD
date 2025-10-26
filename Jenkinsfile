@@ -54,15 +54,23 @@ pipeline {
             }
         }
         stage('Dependency-Check') {
+            agent {
+                Docker{
+                    image 'owasp/dependency-check:latest'
+                     args '-u 0:0'
+                }
+            }
             steps {
                 dir("${APP_NAME}") {
-                    dependencyCheck additionalArguments: ''' 
-                        -o "./" 
-                        -s "./"
-                        -f "ALL" 
-                        --prettyPrint''', odcInstallation: 'Dependency-Check'
-                    dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+                    sh '''
+                        /usr/share/dependency-check/bin/dependency-check.sh \
+                            --project "${APP_NAME}" \
+                            --scan "./" \
+                            --format "XML" \
+                            --out "./"
+                    '''
                 }
+                dependencyCheckPublisher pattern: "${APP_NAME}/dependency-check-report.xml"
             }
         }
 
