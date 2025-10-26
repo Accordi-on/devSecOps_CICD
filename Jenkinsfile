@@ -153,8 +153,6 @@ spec:
                             --dockerfile=/workspace/${APP_NAME}/Dockerfile \
                             --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
                             --destination=${REGISTRY}/${PROJECT}/${IMAGE}:latest \
-                            --insecure \
-                            --skip-tls-verify \
                             --tarPath=/workspace/image.tar
                     """
                     echo "✅ [Docker Build] Image build complete."
