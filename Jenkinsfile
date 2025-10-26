@@ -77,7 +77,12 @@ pipeline {
                 echo '📊 [SonarQube] Running code analysis and sending results...'
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        sh "${SCANNER_HOME}/bin/sonar-scanner"
+                    "${SCANNER_HOME}/bin/sonar-scanner" \
+                        -Dsonar.projectKey=${APP_NAME} \
+                        -Dsonar.projectName=${APP_NAME} \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
             }
