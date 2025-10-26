@@ -54,16 +54,20 @@ pipeline {
         }
         stage('Dependency-Check') {
             steps {
-                echo '🔍 [Dependency-Check] Running vulnerability analysis...'
                 dir("${APP_NAME}") {
                     dependencyCheck additionalArguments: ''' 
                         -o "./" 
                         -s "./"
                         -f "ALL" 
                         --prettyPrint''', odcInstallation: 'OWASP-DepCheck-10'
+                    
+                    // 💡 디버깅 1: 실행 후 파일 목록 확인
+                    sh 'ls -al dependency-check-report.xml || echo "Report file not found!"'
+
+                    // 💡 디버깅 2: Dependency-Check 실행 결과 코드 확인
+                    // sh 'cat dependency-check.log' // 로그 파일이 생성되었다면 확인
 
                     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-
                 }
             }
         }
