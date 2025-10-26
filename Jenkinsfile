@@ -18,21 +18,26 @@ pipeline {
     stages {
         stage('Git Clone') {
             steps {
-                echo "🌐 [Git Clone] Cloning repository from ${GIT_URL}..."
-                git branch: "${BRANCH_NAME}",
-                    credentialsId: "${GIT_CREDENTIALS}",
-                    url: "${GIT_URL}"
+                echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
+                withCredentials([string(credentialsId: "${env.GIT_CREDENTIALS}", variable: 'TOKEN')]) {
+                    sh """
+                        rm -rf repo || true
+                        git clone https://Accordi-on:${TOKEN}@gitea.accordi-on.kro.kr/Accordi-on/${JOB_NAME}.git repo
+                    """
+                }
             }
         }
         stage('Checkout Branch') {
             steps {
-                echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
-                checkout([$class: 'GitSCM',
-                          branches: [[name: "refs/heads/${BRANCH_NAME}"]],
-                          userRemoteConfigs: [[url: "${GIT_URL}", credentialsId: "${GIT_CREDENTIALS}"]]])
+                echo "🌿 [Checkout] Checking out branch ${env.BRANCH_NAME}..."
+                dir('repo') {
+                    sh """
+                        git fetch origin ${BRANCH_NAME}
+                        git checkout ${BRANCH_NAME}
+                    """
+                }
             }
         }
-
         stage('Build Test') {
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
