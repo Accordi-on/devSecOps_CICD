@@ -145,7 +145,6 @@ spec:
                 TAG      = "${IMAGE_TAG}"
             }
             steps {
-                container('kaniko') {
                     sh '''
                         echo "🏗 building with kaniko..."
                         /kaniko/executor \
@@ -154,7 +153,6 @@ spec:
                         --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
                         --cache=true
                     '''
-                }
             }
         }
 
