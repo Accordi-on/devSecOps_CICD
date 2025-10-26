@@ -55,7 +55,7 @@ pipeline {
         }
         stage('Dependency-Check') {
             agent {
-                Docker{
+                docker{
                     image 'owasp/dependency-check:latest'
                      args '-u 0:0'
                 }
