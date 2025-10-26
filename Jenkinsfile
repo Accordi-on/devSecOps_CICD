@@ -109,6 +109,10 @@ spec:
   containers:
   - name: kaniko
     image: gcr.io/kaniko-project/executor:latest
+    command:
+    - sleep
+    args:
+    - infinity
     volumeMounts:
     - name: work
       mountPath: /workspace
@@ -133,7 +137,7 @@ spec:
                         --dockerfile=Dockerfile \
                         --context=${WORKSPACE} \
                         --no-push \
-                        --tarPath /workspace/image.tar
+                        --tar-path /workspace/image.tar
 
                         ls -lh /workspace
                         echo '✅ Build complete, image.tar prepared'
@@ -176,7 +180,6 @@ spec:
             steps {
                 echo "📤 [Image Push] Pushing image.tar to ${IMAGE_FULL} ..."
 
-                // 아까 build 단계에서 archiveArtifacts 한 걸 복구
                 unstashOrUnarchive('image.tar')
                 container('crane') {
                     withCredentials([
