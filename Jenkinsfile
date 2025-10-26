@@ -20,13 +20,6 @@ spec:
       mountPath: /kaniko/.docker
     - name: system-ca
       mountPath: /etc/ssl/certs
-    resources:
-      requests:
-        memory: "1Gi"
-        cpu: "500m"
-      limits:
-        memory: "2Gi"
-        cpu: "1"  
   volumes:
   - name: kaniko-docker-config
     projected:
