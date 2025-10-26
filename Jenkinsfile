@@ -43,6 +43,11 @@ pipeline {
         stage('Build Test') {
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
+                    sh '''
+                        set -e
+                        apt-get update
+                        apt-get install -y --no-install-recommends libatomic1
+                    '''
                 dir("${APP_NAME}") {
                     sh 'npm ci'
                     sh 'npm test'
