@@ -2,7 +2,6 @@ pipeline {
     agent any
     tools {
         nodejs "nodejs"
-        "dependency-check" 'Dependency-Check'
         sonarQubeScanner 'SonarQubeScanner'
     }
     options {
