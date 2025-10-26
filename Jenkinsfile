@@ -1,8 +1,8 @@
 pipeline {
     agent any
     tools {
-        nodejs 'nodejs'                        // 너 이미 쓰던 Node.js 설치명
-        'hudson.plugins.sonar.SonarRunnerInstallation' 'SonarQubeScanner'        // <-- 여기 중요
+        nodejs 'nodejs'
+        'hudson.plugins.sonar.SonarRunnerInstallation' 'SonarQubeScanner'
     }
 
     options {
@@ -103,21 +103,21 @@ pipeline {
                     label 'kaniko-build-agent'
                     defaultContainer 'kaniko'
                     yaml """
-        apiVersion: v1
-        kind: Pod
-        spec:
-        containers:
-        - name: kaniko
-            image: gcr.io/kaniko-project/executor:latest
-            command: ["/busybox/sh"]
-            tty: true
-            volumeMounts:
-            - name: work
-            mountPath: /workspace
-        volumes:
-        - name: work
-            emptyDir: {}
-        """
+apiVersion: v1
+kind: Pod
+spec:
+containers:
+- name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command: ["/busybox/sh"]
+    tty: true
+    volumeMounts:
+    - name: work
+    mountPath: /workspace
+volumes:
+- name: work
+    emptyDir: {}
+            """
                 }
             }
 
@@ -156,21 +156,21 @@ pipeline {
                     label 'crane-push-agent'
                     defaultContainer 'crane'
                     yaml """
-        apiVersion: v1
-        kind: Pod
-        spec:
-        containers:
-        - name: crane
-            image: gcr.io/go-containerregistry/crane:debug
-            command: ["/busybox/sh"]
-            tty: true
-            volumeMounts:
-            - name: work
-            mountPath: /workspace
-        volumes:
-        - name: work
-            emptyDir: {}
-        """
+apiVersion: v1
+kind: Pod
+spec:
+containers:
+- name: crane
+    image: gcr.io/go-containerregistry/crane:debug
+    command: ["/busybox/sh"]
+    tty: true
+    volumeMounts:
+    - name: work
+    mountPath: /workspace
+volumes:
+- name: work
+    emptyDir: {}
+"""
                 }
             }
             environment {
