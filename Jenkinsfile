@@ -106,14 +106,23 @@ pipeline {
                 kubernetes {
                     label 'kaniko-agent'
                     defaultContainer 'kaniko'
-                    yaml """
+yaml """
 apiVersion: v1
 kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest # debug → latest 로 변경
-    command: ["/busybox/sh"]
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - /busybox/sh
+    args:
+    - -c
+    - |
+      # Jenkins expects /bin/sh when it runs `sh` steps, but this image only has /busybox/sh.
+      mkdir -p /bin
+      ln -sf /busybox/sh /bin/sh
+      echo "kaniko container ready, keeping it alive..."
+      sleep 36000
     tty: true
     volumeMounts:
     - name: kaniko-docker-config
@@ -123,15 +132,15 @@ spec:
   volumes:
   - name: kaniko-docker-config
     projected:
-    sources:
+      sources:
       - secret:
-        name: harbor-dockerconfig
-        items:
-        - key: .dockerconfigjson
-          path: config.json
+          name: harbor-dockerconfig
+          items:
+          - key: .dockerconfigjson
+            path: config.json
   - name: system-ca
     configMap:
-    name: system-ca
+      name: system-ca
 """
                 }
             }
