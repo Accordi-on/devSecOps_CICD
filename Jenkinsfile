@@ -42,20 +42,6 @@ spec:
     - name: work
       mountPath: /workspace
     tty: true
-
-  - name: crane
-    image: gcr.io/go-containerregistry/crane:debug
-    command:
-    - /bin/sh
-    args:
-    - -c
-    - |
-      echo "crane ready"
-      sleep 36000
-    volumeMounts:
-    - name: work
-      mountPath: /workspace
-    tty: true
 """
         }
     }
