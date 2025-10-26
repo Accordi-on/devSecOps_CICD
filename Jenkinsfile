@@ -15,6 +15,7 @@ pipeline {
             GIT_CREDENTIALS = "gitea-token"
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
+            DOCKER_IMAGE = ''
             IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "demo-project"
@@ -98,70 +99,14 @@ pipeline {
 
         stage('Docker image build') {
             steps {
-                dockerBuildAndStashImage(
-                    appName: "${APP_NAME}",
-                    imageTag: "${IMAGE_TAG}",
-                    dockerfilePath: "${APP_NAME}/Dockerfile",
-                    contextPath: "${APP_NAME}/"
-                )
+                DOCKER_IMAGE = docker.build registry
             }
         }
 
 
         stage('Docker image push to Harbor') {
-            agent {
-                kubernetes {
-                    label 'crane-push-agent'
-                    defaultContainer 'crane'
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: crane
-    image: gcr.io/go-containerregistry/crane:debug
-    volumeMounts:
-    - name: work
-      mountPath: /workspace
-  volumes:
-  - name: work
-    emptyDir: {}
-"""
-                }
-            }
-            environment {
-                IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-                REGISTRY   = "${HARBOR_REGISTRY}"
-            }
             steps {
                 echo "📤 [Image Push] Pushing image.tar to ${IMAGE_FULL} ..."
-
-                unstashOrUnarchive('image.tar')
-                container('crane') {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'harbor-credentials',
-                            usernameVariable: 'HARBOR_USERNAME',
-                            passwordVariable: 'HARBOR_PASSWORD'
-                        )
-                    ]) {
-                        sh """
-                            ls -lh .
-
-                            echo '🔐 Logging in to Harbor registry...'
-
-                            # crane auth 는 env변수를 받거나 --auth 기본 옵션 사용 가능
-                            # 여기서는 간단히 crane push 에 직접 전달
-                            echo '🚚 Pushing...'
-                            crane push image.tar ${IMAGE_FULL} --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
-
-                            # latest 태그도 밀고 싶으면 한 번 더
-                            crane push image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
-
-                            echo '✅ Push complete: ${IMAGE_FULL}'
-                        """
-                    }
-                }
             }
         }
 
