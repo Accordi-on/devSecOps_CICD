@@ -98,6 +98,10 @@ pipeline {
         }
 
         stage('Docker image build') {
+            options {
+                timeout(time: 10, unit: 'MINUTES')  // 전체 stage 제한시간
+                retry(2)
+            }
             agent {
                 kubernetes {
                     label 'kaniko-build-agent'
@@ -106,51 +110,29 @@ pipeline {
 apiVersion: v1
 kind: Pod
 spec:
-  containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    command:
-    - sleep
-    args:
-    - infinity
+containers:
+- name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command: ["/busybox/sh", "-c", "echo 'kaniko ready'; sleep 36000"]
     volumeMounts:
     - name: work
-      mountPath: /workspace
-  volumes:
-  - name: work
+    mountPath: /workspace
+volumes:
+- name: work
     emptyDir: {}
-            """
+        """
                 }
             }
-
-            environment {
-                IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-            }
-
             steps {
-                echo "🐳 [Docker Build] Building image for ${IMAGE_FULL} (no push yet)..."
-
                 container('kaniko') {
-                    sh """
-                        # Kaniko build -> tar export
-                        /kaniko/executor \
-                        --dockerfile=Dockerfile \
-                        --context=${WORKSPACE} \
-                        --no-push \
-                        --tar-path /workspace/image.tar
-
-                        ls -lh /workspace
-                        echo '✅ Build complete, image.tar prepared'
-                    """
-
-                    // tar 파일을 워크스페이스로 복사해서 다음 stage에서도 접근 가능하게
-                    sh "cp /workspace/image.tar ${WORKSPACE}/image.tar"
+                    sh '''
+                        echo "🏗 building with kaniko..."
+                        /kaniko/executor --dockerfile=Dockerfile --context=${WORKSPACE} --no-push --tar-path /workspace/image.tar
+                    '''
                 }
-
-                // Jenkins 아티팩트로도 저장해두면, 이후 stage가 다른 agent여도 받을 수 있음
-                archiveArtifacts artifacts: 'image.tar', fingerprint: true
             }
         }
+
 
         stage('Docker image push to Harbor') {
             agent {
