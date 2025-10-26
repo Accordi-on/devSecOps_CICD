@@ -1,50 +1,5 @@
 pipeline {
-    agent{
-        kubernetes{
-        defaultContainer 'builder'
-            yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  volumes:
-  - name: work
-    emptyDir: {}
-
-  containers:
-  - name: builder
-    image: alpine:3.20
-    command:
-    - /bin/sh
-    args:
-    - -c
-    - |
-      echo "builder ready"
-      # keep pod alive so Jenkins can exec into it
-      sleep 36000
-    volumeMounts:
-    - name: work
-      mountPath: /workspace
-    tty: true
-
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
-    command:
-    - /busybox/sh
-    args:
-    - -c
-    - |
-      # Jenkins 'sh' step expects /bin/sh to exist.
-      mkdir -p /bin
-      ln -sf /busybox/sh /bin/sh
-      echo "kaniko ready"
-      sleep 36000
-    volumeMounts:
-    - name: work
-      mountPath: /workspace
-    tty: true
-"""
-        }
-    }
+    agent any
     tools {
         nodejs 'nodejs'
     }
@@ -64,7 +19,6 @@ spec:
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "demo-project"
             ARGOCD_APP      = "${env.JOB_NAME}"
-            IMAGE_FULL      = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
 
     }
     stages {
@@ -143,6 +97,40 @@ spec:
         }
 
         stage('Docker image build') {
+            agent {
+                kubernetes {
+                    label 'kaniko-agent'
+                    defaultContainer 'kaniko'
+                    yaml """
+
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest # debug → latest 로 변경
+    command: ["/busybox/sh"]
+    tty: true
+    volumeMounts:
+    - name: kaniko-docker-config
+      mountPath: /kaniko/.docker
+    - name: system-ca
+      mountPath: /etc/ssl/certs
+  volumes:
+  - name: kaniko-docker-config
+    projected:
+    sources:
+      - secret:
+        name: harbor-dockerconfig
+        items:
+        - key: .dockerconfigjson
+          path: config.json
+  - name: system-ca
+    configMap:
+    name: system-ca
+"""
+            }
+            }
             steps {
                 container('kaniko') {
                     sh '''
@@ -159,7 +147,34 @@ spec:
 
 
         stage('Docker image push to Harbor') {
+            agent {
+                kubernetes {
+                    label 'crane-push-agent'
+                    defaultContainer 'crane'
+                    yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: crane
+    image: gcr.io/go-containerregistry/crane:debug
+    volumeMounts:
+    - name: work
+      mountPath: /workspace
+  volumes:
+  - name: work
+    emptyDir: {}
+"""
+                }
+            }
+            environment {
+                IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
+                REGISTRY   = "${HARBOR_REGISTRY}"
+            }
             steps {
+                echo "📤 [Image Push] Pushing image.tar to ${IMAGE_FULL} ..."
+
+                unstashOrUnarchive('image.tar')
                 container('crane') {
                     withCredentials([
                         usernamePassword(
@@ -169,21 +184,19 @@ spec:
                         )
                     ]) {
                         sh """
-                            echo '🔐 crane login'
-                            crane auth login ${HARBOR_REGISTRY} \
-                              -u "${HARBOR_USERNAME}" \
-                              -p "${HARBOR_PASSWORD}" \
-                              --insecure --tls-verify=false
+                            ls -lh .
 
-                            echo '📤 pushing ${IMAGE_FULL}'
-                            crane push /workspace/image.tar ${IMAGE_FULL} \
-                              --insecure --tls-verify=false
+                            echo '🔐 Logging in to Harbor registry...'
 
-                            echo '📤 also pushing :latest'
-                            crane push /workspace/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest \
-                              --insecure --tls-verify=false
+                            # crane auth 는 env변수를 받거나 --auth 기본 옵션 사용 가능
+                            # 여기서는 간단히 crane push 에 직접 전달
+                            echo '🚚 Pushing...'
+                            crane push image.tar ${IMAGE_FULL} --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
 
-                            echo '✅ pushed to Harbor'
+                            # latest 태그도 밀고 싶으면 한 번 더
+                            crane push image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
+
+                            echo '✅ Push complete: ${IMAGE_FULL}'
                         """
                     }
                 }
