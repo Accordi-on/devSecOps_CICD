@@ -42,24 +42,32 @@ pipeline {
         }
 
         stage('Build Test') {
-            agent{
-                docker {
-                    image 'node:25-alpine'
-                    args '-u root:root'
+            agent {
+                kubernetes {
+                    yaml """
+        apiVersion: v1
+        kind: Pod
+        spec:
+        containers:
+        - name: node
+            image: node:25-alpine
+            command: ['cat']
+            tty: true
+            securityContext:
+            runAsUser: 0
+        """
                 }
             }
             steps {
-                echo '🧪 [Build Test] Running unit/lint tests...'
-                dir("${APP_NAME}") {
-                    nodejs('nodejs') {
-                        sh '''
-                            npm ci
-                            npm test
-                        '''
-                    }
+                container('node') {
+                    sh '''
+                        npm ci
+                        npm test
+                    '''
                 }
             }
         }
+
 
         stage('Dependency-Check Analysis') {
             steps {
