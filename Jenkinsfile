@@ -79,7 +79,6 @@ spec:
             HARBOR_PROJECT  = "demo-project"
             ARGOCD_APP      = "${env.JOB_NAME}"
             IMAGE_FULL      = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-            IMAGE_TAG       = "${env.BUILD_NUMBER}"
 
     }
     stages {
