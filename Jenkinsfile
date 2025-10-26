@@ -115,8 +115,6 @@ spec:
         - infinity
       tty: true
       volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
         - name: system-ca
@@ -148,6 +146,7 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
+                    sh 'ls -R / && ls -R /workspace || true && ls -R /home/jenkins || true'
                     sh '''
                         /kaniko/executor \
                             --context ${WORKSPACE}/${APP_NAME} \
