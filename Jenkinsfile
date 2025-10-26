@@ -15,6 +15,7 @@ pipeline {
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "demo-project"
             ARGOCD_APP      = "${env.JOB_NAME}"
+            WORKSPACE = ""
 
     }
     stages {
@@ -25,6 +26,8 @@ pipeline {
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
                 """
+                WORKSPACE = pwd()/${APP_NAME}
+                echo "🌍 [Workspace] Workspace is located at ${WORKSPACE}."
 
             }
         }
