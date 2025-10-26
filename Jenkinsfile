@@ -9,35 +9,35 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
-    command: 
-    - sleep
-    args:
-    - infinity
-    volumeMounts:
-    - name: kaniko-docker-config
-      mountPath: /kaniko/.docker
-    - name: system-ca
-      mountPath: /etc/ssl/certs
-    resources:
-      requests:
-       memory: "512Mi"
-        cpu: "200m"
-      limits:
-        memory: "2Gi"
-        cpu: "1000m"  
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      command:
+        - sleep
+      args:
+        - infinity
+      volumeMounts:
+        - name: kaniko-docker-config
+          mountPath: /kaniko/.docker
+        - name: system-ca
+          mountPath: /etc/ssl/certs
+      resources:
+        requests:
+          memory: "512Mi"
+          cpu: "200m"
+        limits:
+          memory: "2Gi"
+          cpu: "1000m"
   volumes:
-  - name: kaniko-docker-config
-    projected:
-    sources:
-      - secret:
-        name: harbor-dockerconfig
-        items:
-        - key: .dockerconfigjson
-          path: config.json
-  - name: system-ca
-    configMap:
+    - name: kaniko-docker-config
+      projected:
+        sources:
+          - secret:
+              name: harbor-dockerconfig
+              items:
+                - key: .dockerconfigjson
+                  path: config.json
+    - name: system-ca
+      configMap:
         name: system-ca
 """
             }
