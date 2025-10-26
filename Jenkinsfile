@@ -1,5 +1,40 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+                    label 'kaniko-agent'
+                    defaultContainer 'kaniko'
+                    yaml """
+
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command: 
+    - sleep
+    args:
+    - infinity
+    volumeMounts:
+    - name: kaniko-docker-config
+      mountPath: /kaniko/.docker
+    - name: system-ca
+      mountPath: /etc/ssl/certs
+  volumes:
+  - name: kaniko-docker-config
+    projected:
+    sources:
+      - secret:
+        name: harbor-dockerconfig
+        items:
+        - key: .dockerconfigjson
+          path: config.json
+  - name: system-ca
+    configMap:
+        name: system-ca
+"""
+            }
+    }
     tools {
         nodejs 'nodejs'
     }
@@ -97,42 +132,6 @@ pipeline {
         }
 
         stage('Docker image build') {
-            agent {
-                kubernetes {
-                    label 'kaniko-agent'
-                    defaultContainer 'kaniko'
-                    yaml """
-
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest
-    command: 
-    - sleep
-    args:
-    - infinity
-    volumeMounts:
-    - name: kaniko-docker-config
-      mountPath: /kaniko/.docker
-    - name: system-ca
-      mountPath: /etc/ssl/certs
-  volumes:
-  - name: kaniko-docker-config
-    projected:
-    sources:
-      - secret:
-        name: harbor-dockerconfig
-        items:
-        - key: .dockerconfigjson
-          path: config.json
-  - name: system-ca
-    configMap:
-        name: system-ca
-"""
-            }
-            }
             steps {
                 container('kaniko') {
                     sh '''
