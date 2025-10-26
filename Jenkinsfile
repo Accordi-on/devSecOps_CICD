@@ -108,7 +108,9 @@ spec:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
       command:
-        - /busybox/cat
+        - /busybox/sh
+      args:
+        - -c
       tty: true
       volumeMounts:
         - name: kaniko-docker-config
