@@ -15,7 +15,7 @@ pipeline {
         stage('Git clone') {
             steps {
                 echo "📥 [Git clone] Cloning source from ${GIT_URL} ..."
-                git branch: 'main', url: "${GIT_URL}" credentialsId: 'gitea-token'
+                git branch: 'main', url: "${GIT_URL}", credentialsId: 'gitea-token'
             }
         }
 
