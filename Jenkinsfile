@@ -18,7 +18,7 @@ pipeline {
     stages {
         stage('Git Clone') {
             steps {
-                echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
+                echo "🌐 [Git Clone] Cloning repository from. ${env.GIT_URL}..."
                 sh """
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
