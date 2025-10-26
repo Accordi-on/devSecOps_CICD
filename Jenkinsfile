@@ -145,14 +145,9 @@ spec:
                 TAG      = "${IMAGE_TAG}"
             }
             steps {
-                    sh '''
-                        echo "🏗 building with kaniko..."
-                        /kaniko/executor \
-                        --dockerfile=Dockerfile \
-                        --context=${WORKSPACE} \
-                        --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
-                        --cache=true
-                    '''
+                container('kaniko') {
+                    echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
+                }
             }
         }
 
