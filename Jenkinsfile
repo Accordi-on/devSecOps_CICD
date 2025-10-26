@@ -20,7 +20,7 @@ pipeline {
             steps {
                 echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
                 sh """
-                    rm -rf ${APP_NAME} || true
+                    rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
                 """
 
