@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools {
         nodejs 'nodejs'                        // 너 이미 쓰던 Node.js 설치명
-        sonarRunner 'SonarQubeScanner'         // <-- 여기 중요
+        'hudson.plugins.sonar.SonarRunnerInstallation' 'SonarQubeScanner'        // <-- 여기 중요
     }
 
     options {
