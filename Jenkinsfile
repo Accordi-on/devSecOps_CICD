@@ -15,7 +15,7 @@ spec:
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
         - name: system-ca
-          mountPath: /etc/ssl/certs
+          mountPath: /etc/ssl/certs 
       resources:
         requests:
           memory: "512Mi"
@@ -138,7 +138,7 @@ spec:
             steps {
                 container('kaniko') {
                     sh '''
-                        echo "🏗 building with kaniko..."
+                        echo "🏗 building with kaniko...."
                         /kaniko/executor \
                         --dockerfile=Dockerfile \
                         --context=${WORKSPACE} \
