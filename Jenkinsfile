@@ -1,19 +1,30 @@
 pipeline {
     agent any
-    
     options {
         skipDefaultCheckout(true)
     }
+    environment {
+            // === 기본 환경 변수 (나중에 실제 값으로 덮어쓸 수 있음) ===
+            JOB_NAME        = "${env.JOB_NAME}" // jenkins가 넣어줌
+            BRANCH_NAME     = "main"
+
+            // 소스 저장소
+            GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${JOB_NAME}.git"
+            GIT_CREDENTIALS = "gitea-token"
+
+    }
     stages {
-
-
-        stage('Git clone') {
+        stage('Git Clone') {
             steps {
-                echo "📥 [Git clone] Cloning source from ${GIT_URL} ..."
-                git branch: 'main', url: "${GIT_URL}", credentialsId: 'gitea-token'
+                echo "🌐 [Git Clone] Cloning repository from ${GIT_URL}..."
             }
         }
-
+        stage('Checkout Branch') {
+            steps {
+                echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
+            }
+        }
+        
         stage('Build Test') {
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
