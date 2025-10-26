@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools {
         nodejs "nodejs"
-        dependencyCheck 'Dependency-Check'
+        "dependency-check" 'Dependency-Check'
     }
     options {
         skipDefaultCheckout(true)
