@@ -19,9 +19,10 @@ pipeline {
         stage('Git Clone') {
             steps {
                 echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
-                sh '''
-                git clone ${GIT_URL}
-                '''
+                sh """
+                    git clone ${GIT_URL}
+                
+                """
 
             }
         }
