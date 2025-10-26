@@ -2,6 +2,7 @@ pipeline {
     agent any
     tools {
         nodejs "nodejs"
+        dependency-check "OWASP-DepCheck-10"
     }
     options {
         skipDefaultCheckout(true)
@@ -66,7 +67,6 @@ pipeline {
                         ''',
                         odcInstallation: 'OWASP-DepCheck-10'
                     )
-
                     dependencyCheckPublisher(
                         pattern: 'dependency-check-report.xml',
                         failedTotalHigh: 1,
