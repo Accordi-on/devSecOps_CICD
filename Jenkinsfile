@@ -131,18 +131,15 @@ spec:
             }
         }
 
-        stage('Docker image build') {
+        stage('Docker image build') {}
             steps {
-                container('kaniko') {
-                    sh '''
-                        echo "🏗 building with kaniko..."
-                        /kaniko/executor \
-                        --dockerfile=Dockerfile \
-                        --context=${WORKSPACE} \
-                        --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
-                        --cache=true
-                    '''
-                }
+                dockerBuildAndStashImage(
+                    dockerfilePath: "${APP_NAME}/Dockerfile",
+                    contextPath: "${APP_NAME}/",
+                    imageTag: "${IMAGE_TAG}",
+                    stashName: "image.tar",
+                    buildArgs: ""
+                )   
             }
         }
 
