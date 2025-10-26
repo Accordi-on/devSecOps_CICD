@@ -106,12 +106,11 @@ kind: Pod
 spec:
   containers:
     - name: kaniko
-      image: gcr.io/kaniko-project/executor:latest
+      image: gcr.io/kaniko-project/executor:debug
       command:
-        - sleep
+        - /busybox/cat
       args:
         - infinity
-      tty: true
       volumeMounts:
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
@@ -121,11 +120,6 @@ spec:
         requests:
           cpu: "200m"
           memory: "512Mi"
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      volumeMounts:
-        - name: system-ca
-          mountPath: /etc/ssl/certs
   volumes:
     - name: kaniko-docker-config
       projected:
