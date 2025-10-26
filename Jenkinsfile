@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools {
         nodejs 'nodejs'                        // 너 이미 쓰던 Node.js 설치명
-        'hudson.plugins.sonar.SonarRunnerInstallation' 'SonarQubeScanner'        // <-- 여기 중요
+        'hudson.plugins.sonar.SonarRunnerInstallation' 'SonarQubeScanner'
     }
 
     options {
@@ -56,22 +56,28 @@ pipeline {
                 }
             }
         }
-        // stage('Dependency-Check') {
-        //     steps {
-        //         dir("${APP_NAME}") {
-        //             dependencyCheck additionalArguments: ''' 
-        //                 -o "./" 
-        //                 -s "./"
-        //                 -f "ALL" 
-        //                 --prettyPrint''', odcInstallation: 'Dependency-Check'
-        //             dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-        //         }
-        //     }
-        // }
+        stage('Dependency-Check') {
+            environment {
+                DC_HOME = tool 'Dependency-Check'   // Jenkins Global Tool Configuration 이름
+            }
+            steps {
+                dir("${APP_NAME}") {
+                    echo '🔍 [Dependency-Check] Running vulnerability scan...'
+                    sh '''
+                        "${DC_HOME}/bin/dependency-check.sh" \
+                        --project "${APP_NAME}" \
+                        --scan "." \
+                        --format "ALL" \
+                        --out "./dependency-check-report" \
+                        --prettyPrint
+                    '''
+                }
+            }
+        }
 
         stage('Sonarqube and Quality gate') {
             environment {
-                SCANNER_HOME = tool 'SonarQubeScanner'
+                DC_HOME = tool 'Dependency-Check'   // Jenkins Global Tool Configuration에 등록한 이름
             }
             steps {
                 echo '📊 [SonarQube] Running code analysis and sending results...'
