@@ -146,8 +146,13 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
+
                     sh '''
-                        echo "kaniko Seup Test"                     
+                    /kaniko/executor \
+                        --context ${WORKSPACE}/${APP_NAME} \
+                        --dockerfile ${WORKSPACE}/${APP_NAME}/Dockerfile \
+                        --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
+                        --tarPath /workspace/image.tar \                   
                     '''
 
                     echo "✅ [Docker Build] Image build complete."
