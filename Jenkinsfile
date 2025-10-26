@@ -44,7 +44,7 @@ pipeline {
             steps {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
-                    sh 'npm install'
+                    sh 'npm ci'
                     sh 'npm test'
                 }
             }
