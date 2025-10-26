@@ -149,8 +149,8 @@ spec:
 
                     sh '''
                     /kaniko/executor \
-                        --context ${WORKSPACE} \
-                        --dockerfile ${WORKSPACE}/Dockerfile \
+                        --context /workspace/${APP_NAME} \
+                        --dockerfile /workspace/${APP_NAME}/Dockerfile \
                         --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
                         --tarPath /workspace/image.tar                   
                     '''
