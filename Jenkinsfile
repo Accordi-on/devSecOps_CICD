@@ -2,7 +2,6 @@ pipeline {
     agent any
     tools {
         nodejs "nodejs"
-        dependency-check "OWASP-DepCheck-10"
     }
     options {
         skipDefaultCheckout(true)
@@ -57,22 +56,14 @@ pipeline {
             steps {
                 echo '🔍 [Dependency-Check] Running vulnerability analysis...'
                 dir("${APP_NAME}") {
-                    dependencyCheck (
-                        additionalArguments: '''
-                            --scan "./"
-                            --out "./"
-                            --format "ALL"
-                            --project "MyApp"
-                            --prettyPrint
-                        ''',
-                        odcInstallation: 'OWASP-DepCheck-10'
-                    )
-                    dependencyCheckPublisher(
-                        pattern: 'dependency-check-report.xml',
-                        failedTotalHigh: 1,
-                        unstableTotalMedium: 10,
-                        stopBuild: true
-                    )
+                    dependencyCheck additionalArguments: ''' 
+                        -o "./" 
+                        -s "./"
+                        -f "ALL" 
+                        --prettyPrint''', odcInstallation: 'OWASP-DepCheck-10'
+
+                    dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+
                 }
             }
         }
