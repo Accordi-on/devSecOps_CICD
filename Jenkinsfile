@@ -1,9 +1,5 @@
 pipeline {
     agent any
-    tools {
-        nodejs 'nodejs'
-    }
-
     options {
         skipDefaultCheckout(true)
     }
@@ -45,7 +41,11 @@ pipeline {
         }
 
         stage('Build Test') {
+            environment {
+                NODEJS_HOME = tool 'nodejs'
+            }
             steps {
+                nodejs('nodejs') {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         sh '''
@@ -53,6 +53,8 @@ pipeline {
                             npm test
                         '''
                 }
+                }
+
             }
         }
         // stage('Dependency-Check') {
@@ -144,9 +146,11 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
-                    sh '''
-                    /busybox/sh -c echo "sh test"
+                
+                    /busybox/sh -c '''
+                            echo "build test"
                     '''
+
                     echo "✅ [Docker Build] Image build complete."
                     stash name: 'image.tar', includes: 'image.tar'
                 }
