@@ -108,9 +108,11 @@ kind: Pod
 spec:
   containers:
   - name: kaniko
-    image: gcr.io/kaniko-project/executor:latest # debug → latest 로 변경
-    command: ["/busybox/sh"]
-    tty: true
+    image: gcr.io/kaniko-project/executor:latest
+    command: 
+    - sleep
+    args:
+    - infinity
     volumeMounts:
     - name: kaniko-docker-config
       mountPath: /kaniko/.docker
@@ -127,7 +129,7 @@ spec:
           path: config.json
   - name: system-ca
     configMap:
-    name: system-ca
+        name: system-ca
 """
             }
             }
