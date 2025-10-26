@@ -3,6 +3,7 @@ pipeline {
     tools {
         nodejs "nodejs"
         "dependency-check" 'Dependency-Check'
+        sonarQubeScanner 'SonarQubeScanner'
     }
     options {
         skipDefaultCheckout(true)
@@ -70,12 +71,12 @@ pipeline {
         stage('Sonarqube and Quality gate') {
             steps {
                 echo '📊 [SonarQube] Running code analysis and sending results...'
-                withSonarQubeEnv("${SONARQUBE_SERVER}") {
+                withSonarQubeEnv('SonarQube') {
                     sh '''
                         sonar-scanner \
                             -Dsonar.projectKey=test \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=https://sonarqube.accordi-on.kro.kr \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
                             -Dsonar.login=$SONAR_AUTH_TOKEN
                     '''
                 }
