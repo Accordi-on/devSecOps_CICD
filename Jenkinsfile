@@ -108,10 +108,9 @@ spec:
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
       command:
-        - /busybox/sh
+        - /busybox/sleep
       args:
-        - -c
-        - sleep infinity
+        - infinity
       tty: true
       volumeMounts:
         - name: kaniko-docker-config
@@ -146,7 +145,7 @@ spec:
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh '''
-                    echo "sh test"
+                    /busybox/sh -c echo "sh test"
                     '''
                     echo "✅ [Docker Build] Image build complete."
                     stash name: 'image.tar', includes: 'image.tar'
