@@ -27,7 +27,7 @@ pipeline {
             }
         }
         stage('Checkout Branch') {
-            steps {
+            steps { 
                 echo "🌿 [Checkout] Checking out branch ${env.BRANCH_NAME}..."
                 dir("${APP_NAME}") {
                     sh """
