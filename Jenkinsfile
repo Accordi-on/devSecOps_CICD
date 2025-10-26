@@ -155,11 +155,11 @@ spec:
                     sh 'ls -R / && ls -R /workspace || true && ls -R /home/jenkins || true'
                     sh '''
                         /kaniko/executor \
-                            --context workspace/${APP_NAME} \
+                            --context ./${APP_NAME} \
                             --dockerfile Dockerfile \
                             --no-push \
                             --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
-                            --tarPath /workspace/image.tar        
+                            --tarPath ./image.tar        
                     '''
 
                     echo "✅ [Docker Build] Image build complete."
