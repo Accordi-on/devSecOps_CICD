@@ -109,8 +109,6 @@ spec:
       image: gcr.io/kaniko-project/executor:debug
       command:
         - /busybox/cat
-      args:
-        - infinity
       volumeMounts:
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
@@ -143,7 +141,7 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
-                                        sh """
+                    sh """
                     /kaniko/executor --context=dir:///workspace/${APP_NAME}/ --dockerfile=/workspace/${APP_NAME}/Dockerfile --destination=${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} --destination=${REGISTRY}/${PROJECT}/${IMAGE}:latest --tarPath=/workspace/image.tar
                                         """
                     echo "✅ [Docker Build] Image build complete."
@@ -154,59 +152,8 @@ spec:
 
 
         stage('Docker image push to Harbor') {
-            agent {
-                kubernetes {
-                    label 'crane-push-agent'
-                    defaultContainer 'crane'
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: crane
-    image: gcr.io/go-containerregistry/crane:debug
-    volumeMounts:
-    - name: work
-      mountPath: /workspace
-  volumes:
-  - name: work
-    emptyDir: {}
-"""
-                }
-            }
-            environment {
-                IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-                REGISTRY   = "${HARBOR_REGISTRY}"
-            }
             steps {
-                echo "📤 [Image Push] Pushing image.tar to ${IMAGE_FULL} ..."
-
-                unstashOrUnarchive('image.tar')
-                container('crane') {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'harbor-credentials',
-                            usernameVariable: 'HARBOR_USERNAME',
-                            passwordVariable: 'HARBOR_PASSWORD'
-                        )
-                    ]) {
-                        sh """
-                            ls -lh .
-
-                            echo '🔐 Logging in to Harbor registry...'
-
-                            # crane auth 는 env변수를 받거나 --auth 기본 옵션 사용 가능
-                            # 여기서는 간단히 crane push 에 직접 전달
-                            echo '🚚 Pushing...'
-                            crane push image.tar ${IMAGE_FULL} --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
-
-                            # latest 태그도 밀고 싶으면 한 번 더
-                            crane push image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest --insecure --tls-verify=false --username "\${HARBOR_USERNAME}" --password "\${HARBOR_PASSWORD}"
-
-                            echo '✅ Push complete: ${IMAGE_FULL}'
-                        """
-                    }
-                }
+                echo "📤 [Image Push] crane-push-agent Pushing image.tar to ${IMAGE_FULL} ..."
             }
         }
 
