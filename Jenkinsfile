@@ -104,8 +104,65 @@ pipeline {
         }
 
         stage('Docker image push to Harbor') {
+            agent {
+                kubernetes {
+                    yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+labels:
+    job: kaniko-build
+spec:
+containers:
+    - name: kaniko
+    image: gcr.io/kaniko-project/executor:latest
+    command: ['cat']
+    tty: true
+    volumeMounts:
+        - name: docker-config
+        mountPath: /kaniko/.docker
+volumes:
+    - name: docker-config
+    emptyDir: {}
+            """
+                }
+                }
+            environment {
+                IMAGE_FULL = "${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
+                REGISTRY   = "${HARBOR_REGISTRY}"
+            }
             steps {
                 echo "📤 [Image Push] Pushing image to Harbor registry ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}..."
+                container('kaniko'){
+                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USERNAME', passwordVariable: 'HARBOR_PASSWORD')]) {
+                    sh """
+                        echo '🔐 [Kaniko] Creating auth config for Harbor...'
+
+                        AUTH_B64=\$(echo -n "\${HARBOR_USERNAME}:\${HARBOR_PASSWORD}" | base64)
+
+                        cat > /kaniko/.docker/config.json <<EOF
+                        {
+                        "auths": {
+                            "${REGISTRY}": {
+                            "auth": "\${AUTH_B64}"
+                            }
+                        }
+                        }
+                        EOF
+
+                        echo '🏗 [Kaniko] Building and pushing ${IMAGE_FULL} ...'
+
+                        /kaniko/executor \
+                        --dockerfile=Dockerfile \
+                        --context=${WORKSPACE} \
+                        --destination=${IMAGE_FULL} \
+                        --cleanup
+
+                        echo '✅ [Kaniko] Image pushed: ${IMAGE_FULL}'
+                    """
+                    }
+                }
+                
             }
         }
 
