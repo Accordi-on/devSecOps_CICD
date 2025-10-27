@@ -184,14 +184,9 @@ spec:
                 container('jnlp'){
                     withCredentials([
                         usernamePassword(
-                            credentialsId: 'harbor-credentials-robot',
+                            credentialsId: 'harbor-credentials',
                             usernameVariable: 'HARBOR_ADMIN_USER',
                             passwordVariable: 'HARBOR_ADMIN_PASS'
-                        ),
-                        usernamePassword(
-                            credentialsId: 'harbor-credentials',
-                            usernameVariable: 'HARBOR_USER',
-                            passwordVariable: 'HARBOR_PASS'
                         )
                     ]) {
                     sh """
