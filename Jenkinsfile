@@ -212,66 +212,96 @@ spec:
         stage('Anchore analyse') {
             agent{
                 kubernetes{
-                    label 'anchore-agent'
-                    defaultContainer 'anchore'
+                    label 'trivy-agent'
+                    defaultContainer 'trivy'
 yaml """
 apiVersion: v1
-kind: Pod 
+kind: Pod
+metadata:
+  labels:
+    some-label: trivy-agent
 spec:
     containers:
-        - name: anchore
-          image: anchore/enterprise:latest
-          command: ["sleep"]
-          args: ["infinity"]
-          tty: true
-          volumeMounts:
-            - name: workspace-volume
-              mountPath: /home/jenkins/agent/workspace
+      - name: trivy
+        image: anchore/anchore-engine-cli:latest
+        command: ["sleep"]
+        args: ["infinity"]
+        tty: true
+        volumeMounts:
+          - name: workspace-volume
+            mountPath: /home/jenkins/agent/workspace
+          - name: system-ca
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            subPath: ca-certificates.crt
     volumes:
-     - name: workspace-volume
-       emptyDir: {}
-     - name: system-ca
-       configMap:
-         name: system-ca
+      - name: workspace-volume
+        emptyDir: {}
+      - name: system-ca
+        configMap:
+          name: system-ca
 """
                 }
             }
             steps {
-                container('jenkins-agent-anchore') {
+                container('trivy') {
                     echo '🛡 [Anchore] Running container image security scan...'
-                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
-                        sh """
-                            set -e
-
-                            echo "📦 [1/5] Register Harbor registry to Anchore (safe if already exists)..."
-                            anchore-cli registry add harbor.accordi-on.kro.kr "$HARBOR_USER" "$HARBOR_PASS" --registry-type docker_v2 || true
-
-                            echo "🧾 [2/5] Add image to Anchore Engine for analysis..."
-                            anchore-cli image add ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} || true
-
-                            echo "⏳ [3/5] Wait for analysis to complete..."
-                            anchore-cli image wait ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}
-
-                            echo "🧪 [4/5] Run policy evaluation..."
-                            anchore-cli evaluate check ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} --detail > anchore-report.txt
-
-                            echo "🚨 [5/5] Get vulnerability report..."
-                            anchore-cli image vuln ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} all >> anchore-report.txt
-
-                            echo "📁 Save report..."
-                            cat anchore-report.txt
-                        """
-                    }
-                    
-                    // 품질 게이트: Anchore 정책 실패 시 빌드 중단
+                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials',
+                                                    usernameVariable: 'HARBOR_USER',
+                                                    passwordVariable: 'HARBOR_PASS')]) {
                     sh '''
-                        if anchore-cli evaluate check ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} | grep -q "Fail"; then
-                            echo "❌ Anchore policy failed! Build stopped."
+                        set -euo pipefail
+
+                        IMAGE="${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}"
+                        REPORT="trivy-report.json"
+                        # DB 미리 받기 (옵션) — 네트워크/캐시 상황에 따라 주석 처리 가능
+                        echo "⚙️ Downloading/updating Trivy DB (this speeds up subsequent scans)..."
+                        trivy --download-db-only || echo "⚠️ trivy DB download failed (continue anyway)"
+
+                        echo "🔐 Scanning image (private registry) with Trivy: $IMAGE"
+                        # --exit-code 1 : 지정한 심각도(HIGH,CRITICAL) 이상 발견 시 exit code 1로 종료 (빌드 실패)
+                        # --severity : 검사할 심각도 레벨
+                        # --username/--password : private registry 인증
+                        # --format json : JSON 출력 (Jenkins artifact로 남김)
+                        # --timeout : 네트워크/레지스트리 느릴때 대비 (원하면 조정)
+                        trivy image \
+                        --username "$HARBOR_USER" \
+                        --password "$HARBOR_PASS" \
+                        --format json \
+                        --output "$REPORT" \
+                        --exit-code 1 \
+                        --severity HIGH,CRITICAL \
+                        --timeout 5m \
+                        "$IMAGE" || true
+
+                        # trivy가 exit-code 1로 실패시에도 리포트를 남기고, 후속 로직에서 검사한다.
+                        echo "📄 Trivy report:"
+                        if [ -f "$REPORT" ]; then
+                        jq '.' "$REPORT" || cat "$REPORT"
+                        else
+                        echo "⚠️ No report generated."
+                        fi
+
+                        # 간단한 품질게이트 (Fail 판정 시 파이프라인 실패)
+                        if [ -f "$REPORT" ]; then
+                        # trivy JSON 구조에서 HIGH/CRITICAL 취약점 개수를 추출 (safe parsing)
+                        CRITICAL_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' "$REPORT" || echo 0)
+                        HIGH_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length' "$REPORT" || echo 0)
+                        echo "🔎 Found HIGH: $HIGH_COUNT, CRITICAL: $CRITICAL_COUNT"
+
+                        if [ "$((CRITICAL_COUNT + HIGH_COUNT))" -gt 0 ]; then
+                            echo "❌ Trivy found HIGH/CRITICAL vulnerabilities. Failing the build."
+                            # 아티팩트는 남기고 종료
                             exit 1
                         else
-                            echo "✅ Anchore policy passed!"
+                            echo "✅ No HIGH/CRITICAL vulnerabilities found."
+                        fi
+                        else
+                        echo "⚠️ Report missing — treating as failure to be safe."
+                        exit 1
                         fi
                     '''
+                    }
+                    
                 }
             }
         }
