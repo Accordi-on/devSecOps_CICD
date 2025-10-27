@@ -174,11 +174,7 @@ spec:
                             --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
                             --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
                     """
-
                     echo "✅ [Docker Build] Image build complete."
-                    dir("/home/jenkins/agent/workspace/${JOB_NAME}") {
-                        stash name: 'built-image-tar', includes: 'image.tar'
-                    }
                 }
             }
         }
@@ -187,9 +183,6 @@ spec:
             steps {
                 container('crane') {
                     echo "📤 [Image Push] Pushing Docker image to Harbor registry..."
-
-                    unstash 'built-image-tar'
-
                     sh "ls -l ."
 
                     sh """
