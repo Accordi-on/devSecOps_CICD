@@ -37,7 +37,7 @@ spec:
           mountPath: /kaniko/.docker
     - name: crane
       image: gcr.io/go-containerregistry/crane:latest
-      command: /busybox/cat
+      command: ["/busybox/cat"]
       tty: true
       volumeMounts:
         - name: workspace-volume
