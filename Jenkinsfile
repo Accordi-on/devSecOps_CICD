@@ -183,7 +183,7 @@ spec:
             steps {
                 container('crane') {
                     echo "📤 [Image Push] Pushing Docker image to Harbor registry..."
-                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials-robot', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
                     sh """
                         crane auth login ${HARBOR_REGISTRY} \
                             --username $HARBOR_USER \
