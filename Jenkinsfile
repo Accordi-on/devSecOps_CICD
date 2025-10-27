@@ -35,7 +35,19 @@ spec:
           subPath: ca-certificates.crt
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
-
+    - name: crane
+      image: gcr.io/go-containerregistry/crane:latest
+      command: ["sleep"]
+      args: ["infinity"]
+      tty: true
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent/workspace
+        - name: system-ca
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+          subPath: ca-certificates.crt
+        - name: kaniko-docker-config
+          mountPath: /kaniko/.docker
   volumes:
     - name: workspace-volume
       emptyDir: {}
@@ -172,7 +184,14 @@ spec:
 
         stage('Docker image push to Harbor') {
             steps {
-                echo "📤 [Image Push] crane-push-agent Pushing image.tar..."
+                container('crane') {
+                    echo "📤 [Image Push] Pushing Docker image to Harbor registry..."
+                    unstash 'image.tar'
+                    sh """
+                        crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}
+                    """
+                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}"
+                }
             }
         }
 
