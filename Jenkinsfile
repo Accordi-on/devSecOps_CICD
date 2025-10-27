@@ -228,7 +228,7 @@ kind: Pod
 spec:
     containers:
         - name: anchore
-          image: anchore/engine:debug
+          image: anchore/anchore-cli:latest
           command: ["sleep"]
           args: ["infinity"]
           tty: true
