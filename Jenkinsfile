@@ -176,7 +176,9 @@ spec:
                     """
 
                     echo "✅ [Docker Build] Image build complete."
-                    stash name: 'image.tar', includes: "image.tar"
+                    dir("/home/jenkins/agent/workspace/${JOB_NAME}") {
+                        stash name: 'built-image-tar', includes: 'image.tar'
+                    }
                 }
             }
         }
@@ -185,10 +187,15 @@ spec:
             steps {
                 container('crane') {
                     echo "📤 [Image Push] Pushing Docker image to Harbor registry..."
-                    unstash 'image.tar'
+
+                    unstash 'built-image-tar'
+
+                    sh "ls -l ."
+
                     sh """
-                        crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}
+                        crane push image.tar ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}
                     """
+
                     echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}"
                 }
             }
