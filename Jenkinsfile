@@ -165,7 +165,8 @@ spec:
         stage('Docker image build') {
             steps {
                 container('kaniko') {
-                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."\
+                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."
+                    
                     withCredentials([
                         usernamePassword(
                             credentialsId: 'harbor-credentials-robot',
