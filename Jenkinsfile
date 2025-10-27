@@ -159,6 +159,7 @@ spec:
                         -Dsonar.sources=. \
                         -Dsonar.host.url=$SONAR_HOST_URL \
                         -Dsonar.login=$SONAR_AUTH_TOKEN
+                        -Dsonar.exclusions=helm/**,charts/**,**/templates/**,**/values.yaml
                     '''
                 }
             }
@@ -190,7 +191,7 @@ spec:
             }
         }
 
-        stage('Docker image push to Harbor') {
+        stage('Docker image push') {
             environment{
                 HARBOR_CREDENTIALS = credentials('harbor-credentials')
             }
