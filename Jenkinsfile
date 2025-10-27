@@ -287,6 +287,28 @@ spec:
         stage('Modify Helm Repo') {
             steps {
                 echo '📝 [Helm Repo] Updating Helm chart values (image.tag, etc.)...'
+                dir("${APP_NAME}/helm") {
+                    sh """
+                        echo '📝 [Helm Repo] Updating Helm chart values...'
+
+                        sed -i 's|^  repository: .*|  repository: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}|' values.yaml
+                        sed -i 's|^  tag: .*|  tag: "${IMAGE_TAG}"|' values.yaml
+
+                        echo '📝 [Git] Preparing commit...'
+
+                        git config user.name "jenkins-bot"
+                        git config user.email "jenkins-bot@accordi-on.kro.kr"
+
+                        git add values.yaml
+                        git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
+
+                        echo '🚀 [Git] Pushing back to repo...'
+
+                        git push https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@${GIT_URL#https://} HEAD:${BRANCH_NAME}
+                    """
+
+                    echo "✅ [Helm Repo] values.yaml updated, committed, and pushed."
+                }
             }
         }
 
