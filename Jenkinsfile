@@ -84,7 +84,7 @@ spec:
             JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "main"
             GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${env.JOB_NAME}.git"
-            GIT_CREDENTIALS = "gitea-token"
+            GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
             IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
