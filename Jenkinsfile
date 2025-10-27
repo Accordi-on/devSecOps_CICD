@@ -220,7 +220,7 @@ spec:
             }
         }
 
-        stage('Anchore analyse') {
+        stage('Image Analysis') {
             environment{
                 HARBOR_CREDENTIALS = credentials('harbor-credentials')
             }
@@ -230,7 +230,7 @@ spec:
                     sh '''
                         set -euo pipefail
 
-                        IMAGE="${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}"
+                        IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                         REPORT="trivy-report.json"
                         # DB 미리 받기 (옵션) — 네트워크/캐시 상황에 따라 주석 처리 가능
                         echo "⚙️ Downloading/updating Trivy DB (this speeds up subsequent scans)..."
