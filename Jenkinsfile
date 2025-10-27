@@ -24,8 +24,7 @@ spec:
 
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
-      command: ["sleep"]
-      args: ["infinity"]
+      command: ["/bin/bash"]
       tty: true
       volumeMounts:
         - name: workspace-volume
