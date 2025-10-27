@@ -160,7 +160,7 @@ spec:
                             --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
                             --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
                             --no-push \
-                            --destination ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG} \
+                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
                             --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
                     """
 
@@ -172,7 +172,7 @@ spec:
 
         stage('Docker image push to Harbor') {
             steps {
-                echo "📤 [Image Push] crane-push-agent Pushing image.tar to ${IMAGE_FULL} ..."
+                echo "📤 [Image Push] crane-push-agent Pushing image.tar..."
             }
         }
 
