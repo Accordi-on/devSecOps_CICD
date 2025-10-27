@@ -87,8 +87,7 @@ spec:
             GIT_CREDENTIALS = credentials("jenkins-bot")
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
-            GIT_COMMIT_HASH = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-            IMAGE_TAG       = "build-${GIT_COMMIT_HASH}"
+            IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
@@ -309,7 +308,7 @@ spec:
 
                         sh """
                             echo '🚀 [Git] Pushing back to repo...'
-                            git push ${PUSH_URL} HEAD:${BRANCH_NAME}
+                            git push ${PUSH_URL} HEAD: prod
                         """
                     }
 
