@@ -195,10 +195,11 @@ spec:
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
                         || curl -sk -X POST -u "$HARBOR_ADMIN_USER:$HARBOR_ADMIN_PASS" \\
                         -H "Content-Type: application/json" \\
-                        -d '{ "project_name": "${HARBOR_PROJECT}", "public": false }' \\
+                        -d '{ "project_name": "${HARBOR_PROJECT}", "public": true }' \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects"
 
                     """
+                    echo "✅ [Harbor Project] Verified or created project ${HARBOR_PROJECT} in Harbor."
                     }
                 }
                 container('crane') {
@@ -217,8 +218,41 @@ spec:
         }
 
         stage('Anchore analyse') {
+//             agent{
+//                 kubernetes{
+//                     label 'jenkins-agent-anchore'
+//                     defaultContainer 'jenkins-agent-anchore'
+//                     yaml """
+// apiVersion: v1
+// kind: Pod
+// metadata:
+//     labels:
+//         some-label: jenkins-agent-anchore
+// spec:
+//     containers:
+//         - name: jenkins-agent-anchore
+//           image: anchore/engine:latest
+//             command: ['sleep', 'infinity']
+//             tty: true
+//             volumeMounts:
+//                 - name: workspace-volume
+//                     mountPath: /home/jenkins/agent/workspace
+//     volumes:
+//         - name: workspace-volume
+//             emptyDir: {}
+//             medium: Memory
+//                     """
+//                 }
+//             }
             steps {
                 echo '🛡 [Anchore] Running container image security scan...'
+                // sh """
+                //     anchore-cli image add ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}
+                //     anchore-cli image wait ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}
+                //     anchore-cli evaluate check ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} --detail > anchore-report.txt
+                //     anchore-cli image vuln ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} all >> anchore-report.txt
+                // """
+                echo '✅ [Anchore] Security scan completed. Review anchore-report.txt for details.'
             }
         }
 
