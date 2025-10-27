@@ -37,8 +37,8 @@ spec:
           mountPath: /kaniko/.docker
     - name: crane
       image: gcr.io/go-containerregistry/crane:latest
-      command: ["sleep"]
-      args: ["infinity"]
+      command: ["/bin/sh"]
+      args: ["-c", "tail -f /dev/null"]
       tty: true
       volumeMounts:
         - name: workspace-volume
