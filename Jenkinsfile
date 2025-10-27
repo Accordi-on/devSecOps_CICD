@@ -229,15 +229,18 @@ spec:
     containers:
         - name: anchore
           image: anchore/engine:debug
-            command: ['sleep', 'infinity']
-            tty: true
-            volumeMounts:
-                - name: workspace-volume
-                    mountPath: /home/jenkins/agent/workspace
+          command: ["sleep"]
+          args: ["infinity"]
+          tty: true
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: /home/jenkins/agent/workspace
     volumes:
-        - name: workspace-volume
-            emptyDir: {}
-            medium: Memory
+    - name: workspace-volume
+        emptyDir: {}
+    - name: system-ca
+        configMap:
+        name: system-ca
 """
                 }
             }
