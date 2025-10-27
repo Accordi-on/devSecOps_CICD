@@ -11,7 +11,7 @@ COPY package*.json ./
 ENV NPM_CONFIG_CACHE=/tmp/.npm-cache
 
 # 5. 의존성 설치 (여기까지는 변경이 거의 없음 → 캐시 유지)
-RUN npm ci --only=production
+RUN npm ci
 
 # 6. 나머지 소스 코드 복사 (변경 가능 부분)
 COPY . .
