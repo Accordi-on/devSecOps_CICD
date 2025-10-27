@@ -185,7 +185,7 @@ spec:
             }
             steps {
                 container('jnlp'){
-                    sh """
+                    sh '''
                         # 1) 프로젝트 존재 확인, 없으면~ 생성
                         curl -skf -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
@@ -193,18 +193,17 @@ spec:
                         -H "Content-Type: application/json" \\
                         -d '{ "project_name": "${HARBOR_PROJECT}", "public": false }' \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects"
-
-                    """
+                    '''
                     echo "✅ [Harbor Project] Verified or created project ${HARBOR_PROJECT} in Harbor."
                 }
                 container('crane') {
                     echo "📤 [Image Push] Pushing image to Harbor registry..."
-                    sh """
+                    sh '''
                         crane auth login ${HARBOR_REGISTRY} \
                             --username $HARBOR_CREDENTIALS_USR \
                             --password $HARBOR_CREDENTIALS_PSW
                         crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
-                    """
+                    '''
                     echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                 }
             }
@@ -221,7 +220,7 @@ kind: Pod
 spec:
     containers:
         - name: anchore
-          image: anchore/cli:latest
+          image: anchore/enterprise:latest
           command: ["sleep"]
           args: ["infinity"]
           tty: true
