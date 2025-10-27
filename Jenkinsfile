@@ -78,7 +78,7 @@ spec:
             APP_NAME        = "${env.JOB_NAME}"
             IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
-            HARBOR_PROJECT  = "demo-project"
+            HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
     stages {
@@ -183,13 +183,15 @@ spec:
             steps {
                 container('crane') {
                     echo "📤 [Image Push] Pushing Docker image to Harbor registry..."
-                    sh "ls -l ."
-
+                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
                     sh """
-                        crane push image.tar ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}
+                        crane auth login ${HARBOR_REGISTRY} \
+                            --username $HARBOR_USER \
+                            --password $HARBOR_PASS
+                        crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
                     """
-
-                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG}"
+                    }
+                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                 }
             }
         }
