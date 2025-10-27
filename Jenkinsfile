@@ -236,11 +236,11 @@ spec:
             - name: workspace-volume
               mountPath: /home/jenkins/agent/workspace
     volumes:
-    - name: workspace-volume
-        emptyDir: {}
-    - name: system-ca
-        configMap:
-        name: system-ca
+     - name: workspace-volume
+       emptyDir: {}
+     - name: system-ca
+       configMap:
+         name: system-ca
 """
                 }
             }
