@@ -301,14 +301,20 @@ spec:
 
                         git add values.yaml
                         git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-
-                        echo '🚀 [Git] Pushing back to repo...'
-
-                        git push https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@${GIT_URL#https://} HEAD:${BRANCH_NAME}
                     """
+
+                    script {
+                        def PUSH_URL = "https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@" + GIT_URL.replace("https://", "")
+
+                        sh """
+                            echo '🚀 [Git] Pushing back to repo...'
+                            git push ${PUSH_URL} HEAD:${BRANCH_NAME}
+                        """
+                    }
 
                     echo "✅ [Helm Repo] values.yaml updated, committed, and pushed."
                 }
+
             }
         }
 
