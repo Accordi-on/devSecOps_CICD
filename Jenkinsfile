@@ -48,6 +48,17 @@ spec:
           subPath: ca-certificates.crt
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
+    - name: trivy
+      image: aquasec/trivy:latest
+      command: ["sleep"]
+      args: ["infinity"]
+      tty: true
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent/workspace
+        - name: system-ca
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+          subPath: ca-certificates.crt
   volumes:
     - name: workspace-volume
       emptyDir: {}
@@ -210,44 +221,12 @@ spec:
         }
 
         stage('Anchore analyse') {
-            agent{
-                kubernetes{
-                    label 'trivy-agent'
-                    defaultContainer 'trivy'
-yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    some-label: trivy-agent
-spec:
-    containers:
-      - name: trivy
-        image: aquasec/trivy:latest
-        command: ["sleep"]
-        args: ["infinity"]
-        tty: true
-        volumeMounts:
-          - name: workspace-volume
-            mountPath: /home/jenkins/agent/workspace
-          - name: system-ca
-            mountPath: /etc/ssl/certs/ca-certificates.crt
-            subPath: ca-certificates.crt
-    volumes:
-      - name: workspace-volume
-        emptyDir: {}
-      - name: system-ca
-        configMap:
-          name: system-ca
-"""
-                }
+            environment{
+                HARBOR_CREDENTIALS = credentials('harbor-credentials')
             }
             steps {
                 container('trivy') {
                     echo '🛡 [Anchore] Running container image security scan...'
-                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials',
-                                                    usernameVariable: 'HARBOR_USER',
-                                                    passwordVariable: 'HARBOR_PASS')]) {
                     sh '''
                         set -euo pipefail
 
@@ -264,8 +243,8 @@ spec:
                         # --format json : JSON 출력 (Jenkins artifact로 남김)
                         # --timeout : 네트워크/레지스트리 느릴때 대비 (원하면 조정)
                         trivy image \
-                        --username "$HARBOR_USER" \
-                        --password "$HARBOR_PASS" \
+                        --username "$HARBOR_CREDENTIALS_USR" \
+                        --password "$HARBOR_CREDENTIALS_PSW" \
                         --format json \
                         --output "$REPORT" \
                         --exit-code 1 \
@@ -300,7 +279,6 @@ spec:
                         exit 1
                         fi
                     '''
-                    }
                     
                 }
             }
