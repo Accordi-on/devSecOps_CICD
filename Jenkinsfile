@@ -195,7 +195,7 @@ spec:
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
                         || curl -sk -X POST -u "$HARBOR_ADMIN_USER:$HARBOR_ADMIN_PASS" \\
                         -H "Content-Type: application/json" \\
-                        -d '{ "project_name": "${HARBOR_PROJECT}", "public": true }' \\
+                        -d '{ "project_name": "${HARBOR_PROJECT}", "public": false }' \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects"
 
                     """
@@ -218,41 +218,69 @@ spec:
         }
 
         stage('Anchore analyse') {
-//             agent{
-//                 kubernetes{
-//                     label 'jenkins-agent-anchore'
-//                     defaultContainer 'jenkins-agent-anchore'
-//                     yaml """
-// apiVersion: v1
-// kind: Pod
-// metadata:
-//     labels:
-//         some-label: jenkins-agent-anchore
-// spec:
-//     containers:
-//         - name: jenkins-agent-anchore
-//           image: anchore/engine:latest
-//             command: ['sleep', 'infinity']
-//             tty: true
-//             volumeMounts:
-//                 - name: workspace-volume
-//                     mountPath: /home/jenkins/agent/workspace
-//     volumes:
-//         - name: workspace-volume
-//             emptyDir: {}
-//             medium: Memory
-//                     """
-//                 }
-//             }
+            agent{
+                kubernetes{
+                    label 'jenkins-agent-anchore'
+                    defaultContainer 'jenkins-agent-anchore'
+                    yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+    labels:
+        some-label: jenkins-agent-anchore
+spec:
+    containers:
+        - name: jenkins-agent-anchore
+          image: anchore/engine:debug
+            command: ['sleep', 'infinity']
+            tty: true
+            volumeMounts:
+                - name: workspace-volume
+                    mountPath: /home/jenkins/agent/workspace
+    volumes:
+        - name: workspace-volume
+            emptyDir: {}
+            medium: Memory
+                    """
+                }
+            }
             steps {
-                echo '🛡 [Anchore] Running container image security scan...'
-                // sh """
-                //     anchore-cli image add ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}
-                //     anchore-cli image wait ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}
-                //     anchore-cli evaluate check ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} --detail > anchore-report.txt
-                //     anchore-cli image vuln ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} all >> anchore-report.txt
-                // """
-                echo '✅ [Anchore] Security scan completed. Review anchore-report.txt for details.'
+                container('jenkins-agent-anchore') {
+                    echo '🛡 [Anchore] Running container image security scan...'
+                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
+                        sh """
+                            set -e
+
+                            echo "📦 [1/5] Register Harbor registry to Anchore (safe if already exists)..."
+                            anchore-cli registry add harbor.accordi-on.kro.kr "$HARBOR_USER" "$HARBOR_PASS" --registry-type docker_v2 || true
+
+                            echo "🧾 [2/5] Add image to Anchore Engine for analysis..."
+                            anchore-cli image add ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} || true
+
+                            echo "⏳ [3/5] Wait for analysis to complete..."
+                            anchore-cli image wait ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG}
+
+                            echo "🧪 [4/5] Run policy evaluation..."
+                            anchore-cli evaluate check ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} --detail > anchore-report.txt
+
+                            echo "🚨 [5/5] Get vulnerability report..."
+                            anchore-cli image vuln ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} all >> anchore-report.txt
+
+                            echo "📁 Save report..."
+                            cat anchore-report.txt
+                        """
+                    }
+                    
+                    // 품질 게이트: Anchore 정책 실패 시 빌드 중단
+                    sh '''
+                        if anchore-cli evaluate check ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} | grep -q "Fail"; then
+                            echo "❌ Anchore policy failed! Build stopped."
+                            exit 1
+                        else
+                            echo "✅ Anchore policy passed!"
+                        fi
+                    '''
+                }
             }
         }
 
