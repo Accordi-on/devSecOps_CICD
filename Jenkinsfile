@@ -298,9 +298,18 @@ spec:
 
                         git config user.name "jenkins-bot"
                         git config user.email "jenkins-bot@accordi-on.kro.kr"
+                        # 최신 원격 상태 가져오기
+                        git fetch origin
 
-                        git add values.yaml
-                        git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
+                        # 배포 소스 브랜치 체크아웃 (예: main)
+                        git checkout ${BRANCH_NAME}
+
+                        # prod 브랜치 강제 업데이트 (로컬에 prod 만들거나 갱신)
+                        git branch -f prod ${BRANCH_NAME}
+                        git checkout prod
+
+                        echo "🚀 [Git] Pushing prod (fast-forward only)..."
+                        git push https://${USERNAME}:${PASSWORD}@gitea.accordi-on.kro.kr/Accordi-on/test.git prod
                     """
 
                     script {
