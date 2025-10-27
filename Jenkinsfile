@@ -229,7 +229,7 @@ spec:
                 container('trivy') {
                     echo '🛡 [Anchore] Running container image security scan...'
                     sh '''
-                        set -euo pipefail
+                        set -euo pipefail 
 
                         IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                         REPORT="trivy-report.json"
