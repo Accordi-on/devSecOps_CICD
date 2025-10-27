@@ -220,17 +220,14 @@ spec:
         stage('Anchore analyse') {
             agent{
                 kubernetes{
-                    label 'jenkins-agent-anchore'
-                    defaultContainer 'jenkins-agent-anchore'
-                    yaml """
+                    label 'anchore-agent'
+                    defaultContainer 'anchore'
+yaml """
 apiVersion: v1
-kind: Pod
-metadata:
-    labels:
-        some-label: jenkins-agent-anchore
+kind: Pod 
 spec:
     containers:
-        - name: jenkins-agent-anchore
+        - name: anchore
           image: anchore/engine:debug
             command: ['sleep', 'infinity']
             tty: true
@@ -241,7 +238,7 @@ spec:
         - name: workspace-volume
             emptyDir: {}
             medium: Memory
-                    """
+"""
                 }
             }
             steps {
