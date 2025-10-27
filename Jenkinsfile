@@ -37,8 +37,7 @@ spec:
           mountPath: /kaniko/.docker
     - name: crane
       image: gcr.io/go-containerregistry/crane:latest
-      command: ["/bin/sh"]
-      args: ["-c", "tail -f /dev/null"]
+      command: /busybox/cat
       tty: true
       volumeMounts:
         - name: workspace-volume
@@ -89,7 +88,6 @@ spec:
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
                     echo "✅ [Git Clone] Repository cloned successfully."
-                    echo "pwd: \$(pwd)"
                 """
             }
         }
