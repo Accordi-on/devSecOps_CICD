@@ -223,7 +223,7 @@ metadata:
 spec:
     containers:
       - name: trivy
-        image: anchore/anchore-engine-cli:latest
+        image: aquasec/trivy:latest
         command: ["sleep"]
         args: ["infinity"]
         tty: true
