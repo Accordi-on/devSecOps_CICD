@@ -180,20 +180,16 @@ spec:
         }
 
         stage('Docker image push to Harbor') {
+            environment{
+                HARBOR_CREDENTIALS = credentials('harbor-credentials')
+            }
             steps {
                 container('jnlp'){
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'harbor-credentials',
-                            usernameVariable: 'HARBOR_ADMIN_USER',
-                            passwordVariable: 'HARBOR_ADMIN_PASS'
-                        )
-                    ]) {
                     sh """
                         # 1) 프로젝트 존재 확인, 없으면~ 생성
-                        curl -skf -u "$HARBOR_ADMIN_USER:$HARBOR_ADMIN_PASS" \\
+                        curl -skf -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
-                        || curl -sk -X POST -u "$HARBOR_ADMIN_USER:$HARBOR_ADMIN_PASS" \\
+                        || curl -sk -X POST -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
                         -H "Content-Type: application/json" \\
                         -d '{ "project_name": "${HARBOR_PROJECT}", "public": false }' \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects"
@@ -204,14 +200,12 @@ spec:
                 }
                 container('crane') {
                     echo "📤 [Image Push] Pushing image to Harbor registry..."
-                    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
                     sh """
                         crane auth login ${HARBOR_REGISTRY} \
-                            --username $HARBOR_USER \
-                            --password $HARBOR_PASS
+                            --username $HARBOR_CREDENTIALS_USR \
+                            --password $HARBOR_CREDENTIALS_PSW
                         crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
                     """
-                    }
                     echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                 }
             }
@@ -228,7 +222,7 @@ kind: Pod
 spec:
     containers:
         - name: anchore
-          image: anchore/anchore-cli:latest
+          image: anchore/anchore-engine:v0.6.1
           command: ["sleep"]
           args: ["infinity"]
           tty: true
