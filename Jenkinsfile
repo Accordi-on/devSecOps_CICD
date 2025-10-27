@@ -308,7 +308,7 @@ spec:
 
                         sh """
                             echo '🚀 [Git] Pushing back to repo...'
-                            git push ${PUSH_URL} HEAD: prod
+                            git push ${PUSH_URL} HEAD:prod
                         """
                     }
 
