@@ -139,7 +139,7 @@ spec:
         name: system-ca
     - name: workspace-volume
       hostPath:
-        path: /host/jenkins/agent 
+        path: /host/jenkins/agent
         type: Directory
       
 """     }
