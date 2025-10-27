@@ -184,7 +184,7 @@ spec:
                 container('crane') {
                     withCredentials([
                         usernamePassword(
-                            credentialsId: 'harbor-admin-credentials',
+                            credentialsId: 'harbor-credentials-robot',
                             usernameVariable: 'HARBOR_ADMIN_USER',
                             passwordVariable: 'HARBOR_ADMIN_PASS'
                         ),
