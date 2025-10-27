@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json .
 
 # npm install 명령 실행 (의존성 설치)
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # 프로젝트의 모든 파일을 컨테이너로 복사
 COPY . .
