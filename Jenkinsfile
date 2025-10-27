@@ -24,7 +24,8 @@ spec:
 
     - name: kaniko
       image: gcr.io/kaniko-project/executor:debug
-      command: ["/bin/bash"]
+      command: ["sleep"]
+      args: ["infinity"]
       tty: true
       volumeMounts:
         - name: workspace-volume
@@ -36,7 +37,7 @@ spec:
           mountPath: /kaniko/.docker
     - name: crane
       image: gcr.io/go-containerregistry/crane:latest
-      command: ["/busybox/cat"]
+      command: ["/bin/bash"]
       tty: true
       volumeMounts:
         - name: workspace-volume
