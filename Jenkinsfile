@@ -36,9 +36,9 @@ spec:
         - name: kaniko-docker-config
           mountPath: /kaniko/.docker
     - name: crane
-      image: gcr.io/go-containerregistry/crane:latest
-      command: ["crane"]
-      args: ["version"]
+      image: gcr.io/go-containerregistry/crane:debug
+      command: ["sleep"]
+      args: ["infinity"]
       tty: true
       volumeMounts:
         - name: workspace-volume
