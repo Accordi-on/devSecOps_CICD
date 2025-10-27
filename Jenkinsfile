@@ -137,10 +137,6 @@ spec:
     - name: system-ca
       configMap:
         name: system-ca
-    - name: workspace-volume
-      hostPath:
-        path: /host/jenkins/agent
-        type: Directory
       
 """     }
             }
@@ -152,10 +148,6 @@ spec:
             }
             steps {
                 container('kaniko') {
-                    dir("${APP_NAME}"){
-                        sh 'ls -al'
-                        sh 'ls -R / && ls -R /workspace || true && ls -R /home/jenkins || true'
-                    }
                     echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
                     sh '''
                         /kaniko/executor \
