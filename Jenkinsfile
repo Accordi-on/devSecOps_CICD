@@ -166,7 +166,22 @@ spec:
             steps {
                 container('kaniko') {
                     echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."
-                    
+                    sh """
+                        /kaniko/executor \
+                            --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
+                            --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
+                            --no-push \
+                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
+                            --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
+                    """
+                    echo "✅ [Docker Build] Image build complete."
+                }
+            }
+        }
+
+        stage('Docker image push to Harbor') {
+            steps {
+                container('jnlp'){
                     withCredentials([
                         usernamePassword(
                             credentialsId: 'harbor-credentials-robot',
@@ -180,13 +195,6 @@ spec:
                         )
                     ]) {
                     sh """
-                        /kaniko/executor \
-                            --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
-                            --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
-                            --no-push \
-                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
-                            --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
-
                         # 1) 프로젝트 존재 확인, 없으면~ 생성
                         curl -skf -u "$HARBOR_ADMIN_USER:$HARBOR_ADMIN_PASS" \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
@@ -197,13 +205,7 @@ spec:
 
                     """
                     }
-                    echo "✅ [Docker Build] Image build complete."
                 }
-            }
-        }
-
-        stage('Docker image push to Harbor') {
-            steps {
                 container('crane') {
                     echo "📤 [Image Push] Pushing image to Harbor registry..."
                     withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_USER', passwordVariable: 'HARBOR_PASS')]) {
