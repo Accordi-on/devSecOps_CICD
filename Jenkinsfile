@@ -208,7 +208,7 @@ spec:
                     sh """
                         crane auth login ${HARBOR_REGISTRY} \
                             --username $HARBOR_USER \
-                            --password $HARBOR_PASS
+                            --password $HARBOR_PASS 
                         crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
                     """
                     }
