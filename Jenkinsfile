@@ -232,52 +232,51 @@ spec:
 
                         IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                         REPORT="trivy-report.json"
-                        # DB 미리 받기 (옵션) — 네트워크/캐시 상황에 따라 주석 처리 가능
-                        echo "⚙️ Downloading/updating Trivy DB (this speeds up subsequent scans)..."
-                        trivy --download-db-only || echo "⚠️ trivy DB download failed (continue anyway)"
 
                         echo "🔐 Scanning image (private registry) with Trivy: $IMAGE"
-                        # --exit-code 1 : 지정한 심각도(HIGH,CRITICAL) 이상 발견 시 exit code 1로 종료 (빌드 실패)
-                        # --severity : 검사할 심각도 레벨
-                        # --username/--password : private registry 인증
-                        # --format json : JSON 출력 (Jenkins artifact로 남김)
-                        # --timeout : 네트워크/레지스트리 느릴때 대비 (원하면 조정)
+
+                        # Trivy로 이미지 스캔 (HIGH/CRITICAL만 보고서에 수집)
+                        # --exit-code 0 으로 두고, 나중에 우리가 직접 보고서 분석해서 fail 여부 결정
                         trivy image \
                         --username "$HARBOR_CREDENTIALS_USR" \
                         --password "$HARBOR_CREDENTIALS_PSW" \
                         --format json \
                         --output "$REPORT" \
-                        --exit-code 1 \
+                        --exit-code 0 \
                         --severity HIGH,CRITICAL \
                         --timeout 5m \
-                        "$IMAGE" || true
+                        "$IMAGE"
 
-                        # trivy가 exit-code 1로 실패시에도 리포트를 남기고, 후속 로직에서 검사한다.
-                        echo "📄 Trivy report:"
+                        echo "📄 Trivy report (first 200 lines):"
                         if [ -f "$REPORT" ]; then
-                        jq '.' "$REPORT" || cat "$REPORT"
+                        head -n 200 "$REPORT" || true
                         else
                         echo "⚠️ No report generated."
-                        fi
-
-                        # 간단한 품질게이트 (Fail 판정 시 파이프라인 실패)
-                        if [ -f "$REPORT" ]; then
-                        # trivy JSON 구조에서 HIGH/CRITICAL 취약점 개수를 추출 (safe parsing)
-                        CRITICAL_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' "$REPORT" || echo 0)
-                        HIGH_COUNT=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length' "$REPORT" || echo 0)
-                        echo "🔎 Found HIGH: $HIGH_COUNT, CRITICAL: $CRITICAL_COUNT"
-
-                        if [ "$((CRITICAL_COUNT + HIGH_COUNT))" -gt 0 ]; then
-                            echo "❌ Trivy found HIGH/CRITICAL vulnerabilities. Failing the build."
-                            # 아티팩트는 남기고 종료
-                            exit 1
-                        else
-                            echo "✅ No HIGH/CRITICAL vulnerabilities found."
-                        fi
-                        else
-                        echo "⚠️ Report missing — treating as failure to be safe."
+                        echo "❌ Treating this as a failure for safety."
                         exit 1
                         fi
+
+                        echo "🔎 Checking for HIGH or CRITICAL vulnerabilities in $IMAGE ..."
+                        if grep -q '"Severity":"CRITICAL"' "$REPORT" || grep -q '"Severity":"HIGH"' "$REPORT"; then
+                        echo "❌ HIGH/CRITICAL vulnerabilities found in $IMAGE"
+                        STATUS="fail"
+                        else
+                        echo "✅ No HIGH/CRITICAL vulnerabilities in $IMAGE"
+                        STATUS="pass"
+                        fi
+
+                        # 결과 요약 저장 (Jenkins artifact로 남길 수 있게)
+                        echo "IMAGE=${IMAGE}"            >  trivy-summary.txt
+                        echo "STATUS=${STATUS}"         >> trivy-summary.txt
+                        echo "REPORT_FILE=${REPORT}"    >> trivy-summary.txt
+
+                        cat trivy-summary.txt
+
+                        # 최종 품질 게이트: fail이면 빌드 중단
+                        if [ "$STATUS" = "fail" ]; then
+                        exit 1
+                        fi
+
                     '''
                     
                 }
