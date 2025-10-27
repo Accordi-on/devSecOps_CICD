@@ -196,7 +196,6 @@ spec:
 
                     """
                     echo "✅ [Harbor Project] Verified or created project ${HARBOR_PROJECT} in Harbor."
-                    }
                 }
                 container('crane') {
                     echo "📤 [Image Push] Pushing image to Harbor registry..."
@@ -222,7 +221,7 @@ kind: Pod
 spec:
     containers:
         - name: anchore
-          image: anchore/anchore-engine:v0.6.1
+          image: anchore/cli:latest
           command: ["sleep"]
           args: ["infinity"]
           tty: true
