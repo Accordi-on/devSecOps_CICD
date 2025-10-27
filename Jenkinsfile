@@ -1,5 +1,58 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            label 'jenkins-agent-k8s'
+            defaultContainer 'jnlp'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    some-label: jenkins-agent
+spec:
+  containers:
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+      tty: true
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent/workspace
+        - name: system-ca
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+          subPath: ca-certificates.crt
+
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      command: ["sleep"]
+      args: ["infinity"]
+      tty: true
+      volumeMounts:
+        - name: workspace-volume
+          mountPath: /home/jenkins/agent/workspace
+        - name: system-ca
+          mountPath: /etc/ssl/certs/ca-certificates.crt
+          subPath: ca-certificates.crt
+        - name: kaniko-docker-config
+          mountPath: /kaniko/.docker
+
+  volumes:
+    - name: workspace-volume
+      emptyDir: {}
+    - name: system-ca
+      configMap:
+        name: system-ca
+    - name: kaniko-docker-config
+      projected:
+        sources:
+          - secret:
+              name: harbor-dockerconfig
+              items:
+                - key: .dockerconfigjson
+                  path: config.json
+"""           
+            }
+    }
     options {
         skipDefaultCheckout(true)
     }
@@ -99,71 +152,23 @@ pipeline {
         }
 
         stage('Docker image build') {
-            agent {
-                kubernetes {
-                    label 'kaniko-agent'
-                    yaml """
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
-      command:
-        - sleep
-      args:
-        - infinity
-      tty: true
-      volumeMounts:
-        - name: kaniko-docker-config
-          mountPath: /kaniko/.docker
-        - name: system-ca
-          mountPath: /etc/ssl/certs
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
-      resources:
-        requests:
-          cpu: "200m"
-          memory: "512Mi"
-  volumes:
-    - name: kaniko-docker-config
-      projected:
-        sources:
-          - secret:
-              name: harbor-dockerconfig
-              items:
-                - key: .dockerconfigjson
-                  path: config.json
-    - name: system-ca
-      configMap:
-        name: system-ca
-      
-"""     }
-            }
-            environment {
-                REGISTRY = "${HARBOR_REGISTRY}"
-                PROJECT  = "${APP_NAME}"
-                IMAGE    = "${APP_NAME}"
-                TAG      = "${IMAGE_TAG}"
-            }
             steps {
                 container('kaniko') {
-                    echo "🛠 [Docker Build] Building Docker image ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} ..."
-                    sh '''
+                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."
+                    sh """
                         /kaniko/executor \
-                            --context ./${APP_NAME} \
-                            --dockerfile Dockerfile \
+                            --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
+                            --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
                             --no-push \
-                            --destination ${REGISTRY}/${PROJECT}/${IMAGE}:${TAG} \
-                            --tarPath ./image.tar        
-                    '''
+                            --destination ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG} \
+                            --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
+                    """
 
                     echo "✅ [Docker Build] Image build complete."
-                    stash name: 'image.tar', includes: 'image.tar'
+                    stash name: 'image.tar', includes: "image.tar"
                 }
             }
         }
-
 
         stage('Docker image push to Harbor') {
             steps {
