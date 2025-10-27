@@ -5,7 +5,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # package.json 파일을 컨테이너로 복사
-COPY package-lock.json .
+COPY package.json package-lock.json ./
 
 # npm install 명령 실행 (의존성 설치)
 RUN npm ci --ignore-scripts
