@@ -37,7 +37,6 @@ spec:
           mountPath: /kaniko/.docker
     - name: crane
       image: gcr.io/go-containerregistry/crane:latest
-      command: ["/bin/bash"]
       tty: true
       volumeMounts:
         - name: workspace-volume
