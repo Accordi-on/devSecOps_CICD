@@ -246,7 +246,7 @@ spec:
                         --exit-code 0 \
                         --severity HIGH,CRITICAL \
                         --timeout 5m \
-                        "$IMAGE"
+                        "$IMAGE" 
 
                         echo "📄 Trivy report (first 200 lines):"
                         if [ -f "$REPORT" ]; then
