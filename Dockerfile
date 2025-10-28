@@ -1,44 +1,34 @@
-#########################
-# 1단계: build step
-#########################
-FROM node:22-alpine AS build
+# 이미지 정의
+FROM node:22-alpine
+
+# 컨테이너 내부 작업 디렉토리 설정
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+# app dependencies
+# 컨테이너 내부로 package.json 파일들을 복사
+COPY package*.json ./
 
+# package.json 및 package-lock.json 파일에 명시된 의존성 패키지들을 설치
+RUN npm install
+
+# 호스트 머신의 현재 디렉토리 파일들을 컨테이너 내부로 전부 복사
 COPY . .
+
+# npm build
 RUN npm run build
-# => /app/build 에 정적 파일 생성
 
-#########################
-# 2단계: runtime step (non-root nginx)
-#########################
-FROM nginx:alpine
+# prod environment
+FROM nginxinc/nginx-unprivileged:stable-alpine
+USER root
+ARG DOCROOT=/usr/share/nginx/html
+COPY --chown=nobody:nobody . ${DOCROOT}
+RUN find ${DOCROOT} -type d -print0 | xargs -0 chmod 755 && \
+    find ${DOCROOT} -type f -print0 | xargs -0 chmod 644 && \
+    chmod 755 ${DOCROOT}
 
-# 1) 비루트 유저 생성 (uid/gid 1001)
-# 2) 기본 conf 제거
-# 3) static root 보장
-RUN addgroup -g 1001 -S web && \
-    adduser  -S -D -H -u 1001 -G web web && \
-    rm /etc/nginx/conf.d/default.conf && \
-    mkdir -p /usr/share/nginx/html && \
-    mkdir -p /var/cache/nginx /var/log/nginx && \
-    chown -R web:web /usr/share/nginx/html /var/cache/nginx /var/log/nginx
+USER nginx
 
-# 커스텀 nginx 설정 (8080 listen)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# 정적 파일 복사
-COPY --from=build /app/build /usr/share/nginx/html
-
-# 복사된 빌드 산출물도 권한 소유자 맞춰주기
-RUN chown -R web:web /usr/share/nginx/html
-
-# 이제부터 비루트 유저로 실행
-USER 1001
-
-# nginx는 8080에서 listen (nginx.conf 기준)
 EXPOSE 8080
 
+# nginx 서버를 실행하고 백그라운드로 동작하도록 한다.
 CMD ["nginx", "-g", "daemon off;"]
