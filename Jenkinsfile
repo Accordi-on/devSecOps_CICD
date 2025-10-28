@@ -126,7 +126,7 @@ spec:
                 dir("${APP_NAME}") {
                         script {
                             def IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
-                            echo "🔖 [Build Test] Image tag set to ${env.IMAGE_TAG}"
+                            echo "🔖 [Build Test] Image tag set to ${IMAGE_TAG}"
                         }
                         sh '''
                             npm ci
