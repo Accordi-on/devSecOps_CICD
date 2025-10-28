@@ -145,7 +145,7 @@ spec:
         //     }
         // }
 
-        stage('Sonarqube and Quality gate') {
+        stage('Sonarqube and Quality gate') { 
             environment {
                 SCANNER_HOME = tool 'SonarQubeScanner'
             }
