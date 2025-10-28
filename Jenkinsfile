@@ -82,7 +82,7 @@ spec:
 
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
-            BRANCH_NAME     = "main"
+            BRANCH_NAME     = "${env.BRANCH_NAME}"
             GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${env.JOB_NAME}.git"
             GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
@@ -96,7 +96,7 @@ spec:
     stages {
         stage('Git Clone') {
             steps {
-                echo "🌐 [Git Clone] Cloning repository from. ${env.GIT_URL}..."
+                echo "🌐 [Git Clone] Cloning repository from. ${GIT_URL}..."
                 sh """
                     rm -rf ${APP_NAME} || true 
                     git clone ${GIT_URL} ${APP_NAME}
@@ -106,7 +106,7 @@ spec:
         }
         stage('Checkout Branch') {
             steps { 
-                echo "🌿 [Checkout] Checking out branch ${env.BRANCH_NAME}..."
+                echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
                 dir("${APP_NAME}") {
                     sh """
                         git checkout ${BRANCH_NAME}
@@ -125,19 +125,18 @@ spec:
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         script {
-                            env.IMAGE_TAG = sh(script: "node -e \"console.log(require('./package.json').version || '')\"", returnStdout: true).trim()
+                            IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                            echo "🔖 [Build Test] Image tag set to ${IMAGE_TAG}"
                         }
                         sh '''
-                            set -euo pipefail
-                            npm ci --silent
-                            npm test --silent
+                            npm ci
+                            npm test
                         '''
                 }
                 }
 
             }
         }
-
         // stage('Dependency-Check') {
         //     steps {
         //         dir("${APP_NAME}") {
@@ -183,13 +182,13 @@ spec:
         stage('Docker image build') {
             steps {
                 container('kaniko') {
-                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${env.IMAGE_TAG} ..."
+                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."
                     sh """
                         /kaniko/executor \
                             --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
                             --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
                             --no-push \
-                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${env.IMAGE_TAG} \
+                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
                             --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
                     """
                     echo "✅ [Docker Build] Image build complete."
@@ -221,7 +220,7 @@ spec:
                             --password $HARBOR_CREDENTIALS_PSW 
                         crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
                     '''
-                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}"
+                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                 }
             }
         }
@@ -236,7 +235,7 @@ spec:
                     sh '''
                         set -euo pipefail 
 
-                        IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}"
+                        IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                         REPORT="trivy-report.json"
 
                         echo "🔐 Scanning image (private registry) with Trivy: $IMAGE"
@@ -299,7 +298,7 @@ spec:
                             git pull origin ${BRANCH_NAME}
 
                             sed -i "s|^  repository: .*|  repository: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}|" values.yaml
-                            sed -i "s|^  tag: .*|  tag: ${env.IMAGE_TAG}|" values.yaml
+                            sed -i "s|^  tag: .*|  tag: ${IMAGE_TAG}|" values.yaml
 
                             echo '📝 [Git] Preparing commit...'
                             git config user.name "jenkins-bot"
@@ -307,7 +306,7 @@ spec:
 
                             git add values.yaml
 
-                            git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}" || echo "no changes to commit"
+                            git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}" || echo "no changes to commit"
 
                             echo '🌿 [Git] Preparing prod branch...'
 
@@ -328,6 +327,22 @@ spec:
             steps {
                 echo "🚀 [Argo Deploy] Syncing ArgoCD app ${ARGOCD_APP} for deployment..."
                 sh '''
+                    if ! curl -sk -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
+                        ${ARGOCD_URL}/api/v1/projects/${ARGOCD_APP} >/dev/null 2>&1; then
+                        echo "⚠️ Project ${ARGOCD_APP} does not exist. Creating..."
+                        curl -sk -X POST -H "Authorization: Bearer $ARGOCD_TOKEN" \\
+                        -H "Content-Type: application/json" \\
+                        -d '{ "name": "${ARGOCD_APP}", "sourceRepos": ["*"],
+                                "destinations": [{ "server": "https://kubernetes.default.svc", "namespace": "default" }] }' \\
+                        "https://argocd.accordi-on.kro.kr/api/v1/projects"
+                    else
+                        echo "✅ Project ${ARGOCD_APP} already exists."
+                        # 여기서 application sync curl 실행
+                        curl -sk -X POST -H "Authorization: Bearer $ARGOCD_TOKEN" \\
+                        "https://argocd.accordi-on.kro.kr/api/v1/applications/${ARGOCD_APP}/sync"
+
+                    fi
+                    
                 '''
                 
             }
@@ -336,7 +351,7 @@ spec:
 
     post {
         success {
-            echo "✅ [Post Actions] Pipeline for ${APP_NAME}:${env.IMAGE_TAG} completed successfully!"
+            echo "✅ [Post Actions] Pipeline for ${APP_NAME}:${IMAGE_TAG} completed successfully!"
         }
         failure {
             echo "❌ [Post Actions] Pipeline failed. Check logs for details."
