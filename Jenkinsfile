@@ -320,7 +320,7 @@ spec:
                             git checkout prod
 
                             echo "🚀 [Git] Pushing prod branch to remote..."
-                            git push https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@gitea.accordi-on.kro.kr/Accordi-on/test.git prod
+                            git push https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@gitea.accordi-on.kro.kr/Accordi-on/test.git prod --force
 
                             echo "✅ [Helm Repo] values.yaml updated, committed, and pushed to prod."
                         '''
