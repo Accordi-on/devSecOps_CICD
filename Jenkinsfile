@@ -125,7 +125,7 @@ spec:
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         script {
-                            IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                            IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
                             echo "🔖 [Build Test] Image tag set to ${IMAGE_TAG}"
                         }
                         sh '''
