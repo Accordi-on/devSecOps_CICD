@@ -87,7 +87,7 @@ spec:
             GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
-            IMAGE_TAG       = ""
+            IMAGE_TAG       = "${IMAGE_TAG}"
             ARGOCD_CREDENTIALS = credentials('argocd-token')
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "${env.JOB_NAME}"
@@ -119,13 +119,14 @@ spec:
         stage('Build Test') {
             environment {
                 NODEJS_HOME = tool 'nodejs'
+                IMAGE_TAG = ""
             }
             steps {
                 nodejs('nodejs') {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         script {
-                            def IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+                            IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
                             echo "🔖 [Build Test] Image tag set to ${IMAGE_TAG}"
                         }
                         sh '''
