@@ -82,7 +82,7 @@ spec:
 
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
-            BRANCH_NAME     = "${env.BRANCH_NAME}"
+            BRANCH_NAME     = "main"
             GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${env.JOB_NAME}.git"
             GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
@@ -106,7 +106,7 @@ spec:
         }
         stage('Checkout Branch') {
             steps { 
-                echo "🌿 [Checkout] Checking out branch ${env.BRANCH_NAME}..."
+                echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
                 dir("${APP_NAME}") {
                     sh """
                         git checkout ${BRANCH_NAME}
