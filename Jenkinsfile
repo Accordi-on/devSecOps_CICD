@@ -213,7 +213,7 @@ spec:
                     sh '''
                         crane auth login ${HARBOR_REGISTRY} \
                             --username $HARBOR_CREDENTIALS_USR \
-                            --password $HARBOR_CREDENTIALS_PSW
+                            --password $HARBOR_CREDENTIALS_PSW 
                         crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
                     '''
                     echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
