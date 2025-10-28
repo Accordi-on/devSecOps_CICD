@@ -88,6 +88,7 @@ spec:
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
             IMAGE_TAG       = "build-${env.BUILD_NUMBER}"
+            ARGOCD_CREDENTIALS = credentials('argocd-token')
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
@@ -332,6 +333,25 @@ spec:
         stage('Argo Deploy') {
             steps {
                 echo "🚀 [Argo Deploy] Syncing ArgoCD app ${ARGOCD_APP} for deployment..."
+                sh '''
+                    if ! curl -sk -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
+                        ${ARGOCD_URL}/api/v1/projects/${ARGOCD_APP} >/dev/null 2>&1; then
+                        echo "⚠️ Project ${ARGOCD_APP} does not exist. Creating..."
+                        curl -sk -X POST -H "Authorization: Bearer $ARGOCD_TOKEN" \\
+                        -H "Content-Type: application/json" \\
+                        -d '{ "name": "${ARGOCD_APP}", "sourceRepos": ["*"],
+                                "destinations": [{ "server": "https://kubernetes.default.svc", "namespace": "default" }] }' \\
+                        "https://argocd.accordi-on.kro.kr/api/v1/projects"
+                    else
+                        echo "✅ Project ${ARGOCD_APP} already exists."
+                        # 여기서 application sync curl 실행
+                        curl -sk -X POST -H "Authorization: Bearer $ARGOCD_TOKEN" \\
+                        "https://argocd.accordi-on.kro.kr/api/v1/applications/${ARGOCD_APP}/sync"
+
+                    fi
+                    
+                '''
+                
             }
         }
     }
