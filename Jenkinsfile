@@ -125,7 +125,7 @@ spec:
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         scrpt{
-                            env.IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+                            IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
                         }
                         sh '''
                             npm ci
