@@ -8,7 +8,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    some-label: jenkins-agent
+    some-label: jenkins-agent 
 spec:
   containers:
     - name: jnlp
