@@ -124,12 +124,14 @@ spec:
                 nodejs('nodejs') {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
-                        script{
-                            env.IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+                        script {
+                            def pkgVersion = sh(script: "node -e \"console.log(require('./package.json').version || '')\"", returnStdout: true).trim()
+                            env.IMAGE_TAG = pkgVersion
                         }
                         sh '''
-                            npm ci
-                            npm test
+                            set -euo pipefail
+                            npm ci --silent
+                            npm test --silent
                         '''
                 }
                 }
