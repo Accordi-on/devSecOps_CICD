@@ -125,7 +125,8 @@ spec:
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         script {
-                            env.IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+                            def IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+                            env.IMAGE_TAG = IMAGE_TAG
                             echo "🔖 [Build Test] Image tag set to ${env.IMAGE_TAG}"
                         }
                         sh '''
@@ -182,13 +183,13 @@ spec:
         stage('Docker image build') {
             steps {
                 container('kaniko') {
-                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${env.IMAGE_TAG} ..."
+                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."
                     sh """
                         /kaniko/executor \
                             --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
                             --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
                             --no-push \
-                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${env.IMAGE_TAG} \
+                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
                             --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
                     """
                     echo "✅ [Docker Build] Image build complete."
@@ -218,9 +219,9 @@ spec:
                         crane auth login ${HARBOR_REGISTRY} \
                             --username $HARBOR_CREDENTIALS_USR \
                             --password $HARBOR_CREDENTIALS_PSW 
-                        crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}
+                        crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
                     '''
-                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}"
+                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                 }
             }
         }
@@ -235,7 +236,7 @@ spec:
                     sh '''
                         set -euo pipefail 
 
-                        IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}"
+                        IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
                         REPORT="trivy-report.json"
 
                         echo "🔐 Scanning image (private registry) with Trivy: $IMAGE"
@@ -298,7 +299,7 @@ spec:
                             git pull origin ${BRANCH_NAME}
 
                             sed -i "s|^  repository: .*|  repository: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}|" values.yaml
-                            sed -i "s|^  tag: .*|  tag: ${env.IMAGE_TAG}|" values.yaml
+                            sed -i "s|^  tag: .*|  tag: ${IMAGE_TAG}|" values.yaml
 
                             echo '📝 [Git] Preparing commit...'
                             git config user.name "jenkins-bot"
@@ -306,7 +307,7 @@ spec:
 
                             git add values.yaml
 
-                            git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${env.IMAGE_TAG}" || echo "no changes to commit"
+                            git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}" || echo "no changes to commit"
 
                             echo '🌿 [Git] Preparing prod branch...'
 
@@ -351,7 +352,7 @@ spec:
 
     post {
         success {
-            echo "✅ [Post Actions] Pipeline for ${APP_NAME}:${env.IMAGE_TAG} completed successfully!"
+            echo "✅ [Post Actions] Pipeline for ${APP_NAME}:${IMAGE_TAG} completed successfully!"
         }
         failure {
             echo "❌ [Post Actions] Pipeline failed. Check logs for details."
