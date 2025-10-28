@@ -145,7 +145,7 @@ spec:
         //     }
         // }
 
-        stage('Sonarqube Analysis') { 
+        stage('SonarQube Analysis') { 
             environment {
                 SCANNER_HOME = tool 'SonarQubeScanner'
             }
@@ -165,7 +165,7 @@ spec:
             }
         }
 
-        stage('Quality Gate Check') {
+        stage('SonarQube Quality Gate') {
             steps {
                 echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
                 timeout(time: 3, unit: 'MINUTES') {
