@@ -1,20 +1,29 @@
-# 이미지 정의
-FROM node:22-alpine
-
-# 작업 공간
+#########################
+# 1단계: build step
+#########################
+FROM node:22-alpine AS build
 WORKDIR /app
 
-# package.json 파일을 컨테이너로 복사
+# 의존성 설치
 COPY package.json package-lock.json ./
-
-# npm install 명령 실행 (의존성 설치)
 RUN npm ci --ignore-scripts
 
-# 프로젝트의 모든 파일을 컨테이너로 복사
+# 소스 복사
 COPY . .
 
-# 3000 포트 외부에 노출
+# 프로덕션용 정적 빌드 생성
+RUN npm run build
+# => /app/build 에 최종 산출물 생성됨
+
+#########################
+# 2단계: runtime step
+#########################
+FROM nginx:alpine
+# nginx가 기본적으로 /usr/share/nginx/html 에서 정적 파일을 서빙함
+COPY --from=build /app/build /usr/share/nginx/html
+
+# 포트 80을 노출
 EXPOSE 80
 
-# npm start 명령을 실행하여 프로젝트 시작
-CMD ["npm", "start"]
+# nginx 포그라운드 실행
+CMD ["nginx", "-g", "daemon off;"]
