@@ -18,11 +18,10 @@ FROM nginx:alpine
 
 # 1. 비루트 유저/그룹 명시적으로 만들기 (uid/gid 고정해주면 k8s securityContext랑도 잘 맞음)
 RUN addgroup -g 1001 -S web && \
-    adduser -S -D -H -u 1001 -G web web
-
-# 2. 기본 nginx 설정을 우리가 원하는 비권한 포트(8080)로 교체
-#    privileged port(80)는 root만 열 수 있어서 non-root에서는 안 됨
-RUN rm /etc/nginx/conf.d/default.conf
+    adduser  -S -D -H -u 1001 -G web web && \
+    rm /etc/nginx/conf.d/default.conf && \
+    mkdir -p /usr/share/nginx/html && \
+    chown -R web:web /usr/share/nginx /var/cache/nginx /var/run /var/log/nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 3. 정적 파일 복사 (이건 root일 때 해야 함)
