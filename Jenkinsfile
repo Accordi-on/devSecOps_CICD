@@ -124,8 +124,8 @@ spec:
                 nodejs('nodejs') {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
+                            IMAGE_TAG=$(node -p "require('./package.json').version")
                         sh '''
-                            ${IMAGE_TAG}=$(node -p "require('./package.json').version")
                             npm ci
                             npm test
                         '''
