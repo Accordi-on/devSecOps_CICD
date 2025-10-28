@@ -125,8 +125,7 @@ spec:
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
                         script {
-                            def pkgVersion = sh(script: "node -e \"console.log(require('./package.json').version || '')\"", returnStdout: true).trim()
-                            env.IMAGE_TAG = pkgVersion
+                            env.IMAGE_TAG = sh(script: "node -e \"console.log(require('./package.json').version || '')\"", returnStdout: true).trim()
                         }
                         sh '''
                             set -euo pipefail
