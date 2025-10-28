@@ -124,8 +124,10 @@ spec:
                 nodejs('nodejs') {
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
+                        scrpt{
+                            env.IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
+                        }
                         sh '''
-                            IMAGE_TAG=$(node -p "require('./package.json').version")
                             npm ci
                             npm test
                         '''
@@ -134,6 +136,7 @@ spec:
 
             }
         }
+
         // stage('Dependency-Check') {
         //     steps {
         //         dir("${APP_NAME}") {
