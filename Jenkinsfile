@@ -199,7 +199,6 @@ spec:
             steps {
                 container('jnlp'){
                     sh '''
-                        # 1) 프로젝트 존재 확인, 없으면~ 생성
                         curl -skf -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
                         || curl -sk -X POST -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
@@ -236,9 +235,6 @@ spec:
                         REPORT="trivy-report.json"
 
                         echo "🔐 Scanning image (private registry) with Trivy: $IMAGE"
-
-                        # Trivy로 이미지 스캔 (HIGH/CRITICAL만 보고서에 수집)
-                        # --exit-code 0 으로 두고, 나중에 우리가 직접 보고서 분석해서 fail 여부 결정
                         trivy image \
                         --username "$HARBOR_CREDENTIALS_USR" \
                         --password "$HARBOR_CREDENTIALS_PSW" \
@@ -267,14 +263,12 @@ spec:
                         STATUS="pass"
                         fi
 
-                        # 결과 요약 저장 (Jenkins artifact로 남길 수 있게)
                         echo "IMAGE=${IMAGE}"            >  trivy-summary.txt
                         echo "STATUS=${STATUS}"         >> trivy-summary.txt
                         echo "REPORT_FILE=${REPORT}"    >> trivy-summary.txt
 
                         cat trivy-summary.txt
 
-                        # 최종 품질 게이트: fail이면 빌드 중단
                         if [ "$STATUS" = "fail" ]; then
                         exit 1
                         fi
@@ -294,14 +288,11 @@ spec:
 
                             echo '📝 [Helm Repo] Updating Helm chart values...'
 
-                            # 우리가 배포 기준으로 삼는 브랜치로 이동 (예: main)
                             git checkout ${BRANCH_NAME}
 
-                            # 최신 원격 반영 (안 하면 push에서 뒤쳐졌다고 막힐 수 있음)
                             git fetch origin
                             git pull origin ${BRANCH_NAME}
 
-                            # values.yaml 이미지 정보 업데이트
                             sed -i "s|^  repository: .*|  repository: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}|" values.yaml
                             sed -i "s|^  tag: .*|  tag: ${IMAGE_TAG}|" values.yaml
 
@@ -311,12 +302,10 @@ spec:
 
                             git add values.yaml
 
-                            # 변경이 없으면 커밋 실패(exit 1)하니까 방어
                             git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}" || echo "no changes to commit"
 
                             echo '🌿 [Git] Preparing prod branch...'
 
-                            # prod 브랜치를 현재 ${BRANCH_NAME} 커밋으로 fast-forward 시킴
                             git branch -f prod ${BRANCH_NAME}
                             git checkout prod
 
