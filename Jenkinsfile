@@ -87,7 +87,6 @@ spec:
             GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
-            IMAGE_TAG       = "${IMAGE_TAG}"
             ARGOCD_CREDENTIALS = credentials('argocd-token')
             HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "${env.JOB_NAME}"
@@ -96,6 +95,16 @@ spec:
     stages {
         stage('Git Clone') {
             steps {
+                script{
+                    def num = env.BUILD_NUMBER as Integer
+                    // 3자리 버전 포맷
+                    def major = (num / 100).intValue()
+                    def minor = ((num % 100) / 10).intValue()
+                    def patch = num % 10
+
+                    env.IMAGE_TAG= "${major}.${minor}.${patch}"
+                    echo "📦 IMAGE_TAG = ${env.IMAGE_TAG}"
+                }
                 echo "🌐 [Git Clone] Cloning repository from. ${env.GIT_URL}..."
                 sh """
                     rm -rf ${APP_NAME} || true 
@@ -119,16 +128,11 @@ spec:
         stage('Build Test') {
             environment {
                 NODEJS_HOME = tool 'nodejs'
-                IMAGE_TAG = ""
             }
             steps {
-                nodejs('nodejs') {
+                nodejs('nodejs') { 
                 echo '🧪 [Build Test] Running unit/lint tests...'
                 dir("${APP_NAME}") {
-                        script {
-                            IMAGE_TAG = sh(script: "node -p \"require('./package.json').version\"", returnStdout: true).trim()
-                            echo "🔖 [Build Test] Image tag set to ${IMAGE_TAG}"
-                        }
                         sh '''
                             npm ci
                             npm test
