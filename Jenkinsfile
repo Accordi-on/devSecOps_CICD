@@ -13,7 +13,7 @@ spec:
   containers:
     - name: jnlp
       image: jenkins/inbound-agent:latest
-      args: ['\$(JENKINS_SECRET)', '\$(JENKINS_NAME)']
+      args:
       tty: true
       volumeMounts:
         - name: workspace-volume
