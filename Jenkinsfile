@@ -206,7 +206,7 @@ spec:
                 HARBOR_CREDENTIALS = credentials('harbor-credentials')
             }
             steps {
-                container('jnlp'){
+                container('jnlp'){ 
                     sh '''
                         curl -skf -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
                         "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
