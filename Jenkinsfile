@@ -102,7 +102,7 @@ spec:
                     def minor = ((num % 100) / 10).intValue()
                     def patch = num % 10
 
-                    env.IMAGE_TAG= "${major}.${minor}.${patch}"
+                    env.IMAGE_TAG= "v${major}.${minor}.${patch}"
                     echo "📦 IMAGE_TAG = ${env.IMAGE_TAG}"
                 }
                 echo "🌐 [Git Clone] Cloning repository from. ${env.GIT_URL}..."
