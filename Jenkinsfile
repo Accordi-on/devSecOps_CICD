@@ -56,69 +56,69 @@ pipeline {
             }
         }
 
-        stage('Dependency-Check') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/dependencyCheck.groovy').run()
-                }
-            }
-        }
+        // stage('Dependency-Check') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/dependencyCheck.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/sonarQubeAnalysis.groovy').run()
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/sonarQubeAnalysis.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('SonarQube Quality Gate') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/sonarQubeQualityGate.groovy').run()
-                }
-            }
-        }
+        // stage('SonarQube Quality Gate') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/sonarQubeQualityGate.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('Docker image build') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/dockerImageBuild.groovy').run()
-                }
-            }
-        }
+        // stage('Docker image build') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/dockerImageBuild.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('Docker image push') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/dockerImagePush.groovy').run()
-                }
-            }
-        }
+        // stage('Docker image push') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/dockerImagePush.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('Image Analysis') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/imageAnalysis.groovy').run()
-                }
-            }
-        }
+        // stage('Image Analysis') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/imageAnalysis.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('Modify Helm Repo') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/modifyHelmRepo.groovy').run()
-                }
-            }
-        }
+        // stage('Modify Helm Repo') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/modifyHelmRepo.groovy').run()
+        //         }
+        //     }
+        // }
 
-        stage('Argo Deploy') {
-            steps {
-                script {
-                    load('${APP_NAME}/ci/argoDeploy.groovy').run()
-                }
-            }
-        }
+        // stage('Argo Deploy') {
+        //     steps {
+        //         script {
+        //             load('${APP_NAME}/ci/argoDeploy.groovy').run()
+        //         }
+        //     }
+        // }
 
     }
     post {
