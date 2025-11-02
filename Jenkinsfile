@@ -4,7 +4,7 @@ pipeline {
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "dev"
-            GIT_URL         = "${env.GIT_URL}"
+            GIT_URL         = "http://gitea.service.accordi-on.com/Accordi-on/${env.JOB_NAME}.git"
             HARBOR_REGISTRY = "${env.HARBOR_URL}"
             ARGOCD_URL      = "${env.ARGOCD_URL}"
             GIT_CREDENTIALS = credentials("gitea-token")
