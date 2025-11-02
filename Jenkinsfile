@@ -55,12 +55,12 @@ pipeline {
 
         stage('SonarQube Quality Gate') {
             steps {
-                script {
-                    sonar.qualityGateCheck() 
+                echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
+                timeout(time: 3, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
-
         // stage('Docker image build') {
         //     steps {
         //         script {

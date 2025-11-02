@@ -14,11 +14,4 @@ def sonarQubeAnalysis() {
     }
 }
 
-def qualityGateCheck(){
-                echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-    }
-}
-
 return this
