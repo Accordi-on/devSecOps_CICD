@@ -1,7 +1,6 @@
 pipeline {
     agent { kubernetes { inheritFrom 'jenkins-agent-k8s' } }
     environment {
-            JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "main"
             GIT_URL         = "http://gitea.service.accordi-on.com/Accordi-on/${env.JOB_NAME}.git"
             HARBOR_REGISTRY = "harbor.service.accordi-on.com"
@@ -10,13 +9,20 @@ pipeline {
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
             ARGOCD_CREDENTIALS = credentials('argocd-token')
-            HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
     stages {
         stage('Image Tag') {
             steps {
                 script {
+                    //name slice
+                    def parts = env.JOB_NAME.split('_')
+                    env.PROJECT_NAME = parts[0]
+                    env.SERVICE_NAME = parts.size() > 1 ? parts[1] : ''
+                    echo "PROJECT_NAME = ${env.PROJECT_NAME}"
+                    echo "SERVICE_NAME = ${env.SERVICE_NAME}"
+
+                    //make image tag
                     def num = env.BUILD_NUMBER as Integer
                     def major = (num / 100).intValue()
                     def minor = ((num % 100) / 10).intValue()

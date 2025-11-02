@@ -6,7 +6,7 @@ def build() {
                 --context /home/jenkins/agent/workspace/${env.JOB_NAME} \
                 --dockerfile /home/jenkins/agent/workspace/${env.JOB_NAME}/Dockerfile \
                 --no-push \
-                --destination ${env.HARBOR_REGISTRY}/${env.JOB_NAME}/${env.APP_NAME}:${env.IMAGE_TAG} \
+                --destination ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG} \
                 --tarPath /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar
         """
         echo "✅ [Docker Build] Image build complete."
@@ -14,7 +14,6 @@ def build() {
 }
 
 def push() {
-    // Harbor credentials는 Jenkins Credentials Binding에서 받아옴
     withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_CREDENTIALS_USR', passwordVariable: 'HARBOR_CREDENTIALS_PSW')]) {
 
         container('jnlp') {
@@ -40,9 +39,9 @@ def push() {
                     --password \$HARBOR_CREDENTIALS_PSW
 
                 crane push /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar \
-                    ${env.HARBOR_REGISTRY}/${env.HARBOR_PROJECT}/${env.APP_NAME}:${env.IMAGE_TAG}
+                    ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG}
             """
-            echo "✅ [Image Push] Image pushed to ${env.HARBOR_REGISTRY}/${env.HARBOR_PROJECT}/${env.APP_NAME}:${env.IMAGE_TAG}"
+            echo "✅ [Image Push] Image pushed to ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG}"
         }
     }
 }
