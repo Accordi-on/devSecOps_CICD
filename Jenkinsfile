@@ -82,13 +82,13 @@ pipeline {
             }
         }
 
-        // stage('Image Analysis') {
-        //     steps {
-        //         script {
-        //             load('ci/imageAnalysis.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('Image Analysis') {
+            steps {
+                script {
+                    load('ci/imageAnalysis.groovy').analysis()
+                }
+            }
+        }
 
         // stage('Modify Helm Repo') {
         //     steps {

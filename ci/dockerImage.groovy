@@ -38,9 +38,10 @@ def push() {
                     crane auth login ${env.HARBOR_REGISTRY} \
                         --username \$HARBOR_CREDENTIALS_USR \
                         --password \$HARBOR_CREDENTIALS_PSW \
-
+                        
                     crane push /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar \
                         ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG} \
+                        --insecure
             """
             echo "✅ [Image Push] Image pushed to ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG}"
             }
