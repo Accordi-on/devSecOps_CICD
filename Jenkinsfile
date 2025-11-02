@@ -14,7 +14,7 @@ pipeline {
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
     stages {
-        stage('Git Clone') {
+        stage('Checkout') {
             steps {
                 script {
                     def num = env.BUILD_NUMBER as Integer
@@ -25,6 +25,9 @@ pipeline {
                     env.IMAGE_TAG = "v${major}.${minor}.${patch}"
                     echo "📦 IMAGE_TAG = ${env.IMAGE_TAG}"
                 }
+                sh '''
+                    git checkout ${BRANCH_NAME}
+                '''
             }
         }
 
