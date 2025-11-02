@@ -4,7 +4,7 @@ def build() {
         sh """
             /kaniko/executor \
                 --context /home/jenkins/agent/workspace/${env.JOB_NAME}/${env.APP_NAME} \
-                --dockerfile /home/jenkins/agent/workspace/${env.JOB_NAME}/${env.APP_NAME}/Dockerfile \
+                --dockerfile /home/jenkins/agent/workspace/${env.APP_NAME}/Dockerfile \
                 --no-push \
                 --destination ${env.HARBOR_REGISTRY}/${env.JOB_NAME}/${env.APP_NAME}:${env.IMAGE_TAG} \
                 --tarPath /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar
@@ -22,11 +22,11 @@ def push() {
             sh """
                 set -e
                 curl -skf -u "\$HARBOR_CREDENTIALS_USR:\$HARBOR_CREDENTIALS_PSW" \
-                    "https://${env.HARBOR_REGISTRY}/api/v2.0/projects/${env.HARBOR_PROJECT}" >/dev/null 2>&1 \
+                    "http://${env.HARBOR_REGISTRY}/api/v2.0/projects/${env.HARBOR_PROJECT}" >/dev/null 2>&1 \
                 || curl -sk -X POST -u "\$HARBOR_CREDENTIALS_USR:\$HARBOR_CREDENTIALS_PSW" \
                     -H "Content-Type: application/json" \
                     -d '{ "project_name": "${env.HARBOR_PROJECT}", "public": false }' \
-                    "https://${env.HARBOR_REGISTRY}/api/v2.0/projects"
+                    "http://${env.HARBOR_REGISTRY}/api/v2.0/projects"
             """
             echo "✅ [Harbor Project] Verified or created project ${env.HARBOR_PROJECT}."
         }
