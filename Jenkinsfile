@@ -39,7 +39,7 @@ pipeline {
         stage('Dependency-Check') {
             steps {
                 script {
-                    load('ci/dependencyCheck.groovy').run()
+                    load('ci/dependencyCheck.groovy').dependencyCheck()
                 }
             }
         }

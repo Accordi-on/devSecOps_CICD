@@ -1,4 +1,4 @@
-def run() {
+def dependencyCheck(){
     echo "🔍 [Dependency-Check] Running security scan for ${env.APP_NAME}..."
     def dcHome = tool name: 'dependencycheck', type: 'dependency-check'
     def dcData = "/home/jenkins/agent/workspace/.dependency-check"
