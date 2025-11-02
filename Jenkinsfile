@@ -51,7 +51,7 @@ pipeline {
         stage('Build Test') {
             steps {
                 script {
-                    load('${env.APP_NAME}/ci/buildTest.groovy').run("${env.APP_NAME}")
+                    load('ci/buildTest.groovy').run("${env.APP_NAME}")
                 }
             }
         }
