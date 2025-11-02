@@ -47,7 +47,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    sonar = load 'ci/sonarQube.groovy'
+                    def sonar = load 'ci/sonarQube.groovy'
                     sonar.sonarQubeAnalysis()
                 }
             }
@@ -64,7 +64,7 @@ pipeline {
         stage('Docker image build') {
             steps {
                 script {
-                    docker = load('ci/dockerImage.groovy')
+                    def docker = load('ci/dockerImage.groovy')
                     docker.build()
                 }
             }
