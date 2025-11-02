@@ -17,7 +17,7 @@ pipeline {
                 script {
                     //name slice
                     def parts = env.JOB_NAME.split('_')
-                    env.PROJECT_NAME = parts[0]
+                    env.PROJECT_NAME = parts[0].toLowerCase()
                     env.SERVICE_NAME = parts.size() > 1 ? parts[1].toLowerCase() : ''
                     echo "PROJECT_NAME = ${env.PROJECT_NAME}"
                     echo "SERVICE_NAME = ${env.SERVICE_NAME}"
