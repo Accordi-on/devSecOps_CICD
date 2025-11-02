@@ -20,3 +20,5 @@ def qualityGateCheck(){
                     waitForQualityGate abortPipeline: true
     }
 }
+
+return this
