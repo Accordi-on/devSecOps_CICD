@@ -44,15 +44,25 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube Analysis') { 
+            environment {
+                SCANNER_HOME = tool 'SonarQubeScanner'
+            }
             steps {
-                script {
-                    sonar = load 'ci/sonarQube.groovy'
-                    sonar.sonarQubeAnalysis()
+                echo '📊 [SonarQube] Running code analysis and sending results...'
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                    "${SCANNER_HOME}/bin/sonar-scanner" \
+                        -Dsonar.projectKey=${APP_NAME} \
+                        -Dsonar.projectName=${APP_NAME} \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN \
+                        -Dsonar.exclusions=helm/**,charts/**,**/templates/**,**/values.yaml,${APP_NAME}/dependency-check-report/** 
+                    '''
                 }
             }
         }
-
         stage('SonarQube Quality Gate') {
             steps {
                 echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
