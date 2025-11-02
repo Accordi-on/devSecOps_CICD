@@ -44,13 +44,13 @@ pipeline {
             }
         }
 
-        // stage('SonarQube Analysis') {
-        //     steps {
-        //         script {
-        //             load('${APP_NAME}/ci/sonarQubeAnalysis.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    load('ci/sonarQubeAnalysis.groovy').sonarQubeAnalysis()
+                }
+            }
+        }
 
         // stage('SonarQube Quality Gate') {
         //     steps {
