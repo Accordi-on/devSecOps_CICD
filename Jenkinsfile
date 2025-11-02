@@ -14,71 +14,117 @@ pipeline {
             HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
+pipeline {
+    agent any
+
+    // 필요하면 여기서 env 정의
+    // environment {
+    //     APP_NAME = 'my-app'
+    // }
+
     stages {
         stage('Git Clone') {
             steps {
-                script{
+                script {
                     def num = env.BUILD_NUMBER as Integer
                     def major = (num / 100).intValue()
                     def minor = ((num % 100) / 10).intValue()
                     def patch = num % 10
 
-                    env.IMAGE_TAG= "v${major}.${minor}.${patch}"
+                    env.IMAGE_TAG = "v${major}.${minor}.${patch}"
                     echo "📦 IMAGE_TAG = ${env.IMAGE_TAG}"
                 }
-                echo "🌐 [Git Clone] Cloning repository from. ${env.GIT_URL}..."
+
+                echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
                 sh """
-                    rm -rf ${APP_NAME} || true 
+                    rm -rf ${APP_NAME} || true
                     git clone ${GIT_URL} ${APP_NAME}
                     echo "✅ [Git Clone] Repository cloned successfully."
                 """
             }
-        }stage('Checkout Branch') {
-            steps { 
+        }
+
+        stage('Checkout Branch') {
+            steps {
                 echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
                 dir("${APP_NAME}") {
                     sh """
-                        git checkout ${BRANCH_NAME}
                         git fetch origin ${BRANCH_NAME}
+                        git checkout ${BRANCH_NAME}
                     """
                 }
             }
-        }stage('Build Test'){
+        }
+
+        stage('Build Test') {
             steps {
-                script { load('ci/buildTest.groovy').run("${APP_NAME}") }
-            }
-        }stage('Dependency-Check'){
-            steps {
-                script { load('ci/dependencyCheck.groovy').run() }
+                script {
+                    load('ci/buildTest.groovy').run("${APP_NAME}")
+                }
             }
         }
-        stage('SonarQube Analysis'){
+
+        stage('Dependency-Check') {
             steps {
-                script { load('ci/sonarQubeAnalysis.groovy').run() }
+                script {
+                    load('ci/dependencyCheck.groovy').run()
+                }
             }
-        }stage('SonarQube Quality Gate'){
+        }
+
+        stage('SonarQube Analysis') {
             steps {
-                script { load('ci/sonarQubeQualityGate.groovy').run() }
+                script {
+                    load('ci/sonarQubeAnalysis.groovy').run()
+                }
             }
-        }stage('Docker image build'){
+        }
+
+        stage('SonarQube Quality Gate') {
             steps {
-                script { load('ci/dockerImageBuild.groovy').run() }
+                script {
+                    load('ci/sonarQubeQualityGate.groovy').run()
+                }
             }
-        }stage('Docker image push'){
+        }
+
+        stage('Docker image build') {
             steps {
-                script { load('ci/dockerImagePush.groovy').run() }
+                script {
+                    load('ci/dockerImageBuild.groovy').run()
+                }
             }
-        }stage('Image Analysis'){
+        }
+
+        stage('Docker image push') {
             steps {
-                script { load('ci/imageAnalysis.groovy').run() }
+                script {
+                    load('ci/dockerImagePush.groovy').run()
+                }
             }
-        }stage('Modify Helm Repo'){
+        }
+
+        stage('Image Analysis') {
             steps {
-                script { load('ci/modifyHelmRepo.groovy').run() }
+                script {
+                    load('ci/imageAnalysis.groovy').run()
+                }
             }
-        }stage('Argo Deploy'){
+        }
+
+        stage('Modify Helm Repo') {
             steps {
-                script { load('ci/argoDeploy.groovy').run() }
+                script {
+                    load('ci/modifyHelmRepo.groovy').run()
+                }
+            }
+        }
+
+        stage('Argo Deploy') {
+            steps {
+                script {
+                    load('ci/argoDeploy.groovy').run()
+                }
             }
         }
     }
