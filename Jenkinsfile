@@ -3,7 +3,7 @@ pipeline {
     options { skipDefaultCheckout(true) }
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
-            BRANCH_NAME     = "dev"
+            BRANCH_NAME     = "main"
             GIT_URL         = "http://gitea.service.accordi-on.com/Accordi-on/${env.JOB_NAME}.git"
             HARBOR_REGISTRY = "http://harbor.service.accordi-on.com"
             ARGOCD_URL      = "http://argocd.service.accordi-on.com"
