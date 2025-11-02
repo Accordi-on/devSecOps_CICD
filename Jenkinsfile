@@ -1,6 +1,5 @@
 pipeline {
     agent { kubernetes { inheritFrom 'jenkins-agent-k8s' } }
-    options { skipDefaultCheckout(true) }
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "main"
@@ -17,7 +16,6 @@ pipeline {
     stages {
         stage('Git Clone') {
             steps {
-                checkout scm
                 script {
                     def num = env.BUILD_NUMBER as Integer
                     def major = (num / 100).intValue()
