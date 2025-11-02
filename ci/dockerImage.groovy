@@ -3,8 +3,8 @@ def build() {
         echo "🐳 [Docker Build] Building Docker image for ${env.APP_NAME}:${env.IMAGE_TAG} ..."
         sh """
             /kaniko/executor \
-                --context /home/jenkins/agent/workspace/${env.JOB_NAME}/${env.APP_NAME} \
-                --dockerfile /home/jenkins/agent/workspace/${env.APP_NAME}/Dockerfile \
+                --context /home/jenkins/agent/workspace/${env.JOB_NAME} \
+                --dockerfile /home/jenkins/agent/workspace/${env.JOB_NAME}/Dockerfile \
                 --no-push \
                 --destination ${env.HARBOR_REGISTRY}/${env.JOB_NAME}/${env.APP_NAME}:${env.IMAGE_TAG} \
                 --tarPath /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar
