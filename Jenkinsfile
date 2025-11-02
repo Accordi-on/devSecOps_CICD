@@ -47,23 +47,23 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    load('ci/sonarQubeAnalysis.groovy').sonarQubeAnalysis()
+                    load('ci/sonarQube.groovy').sonarQubeAnalysis()
                 }
             }
         }
 
-        // stage('SonarQube Quality Gate') {
-        //     steps {
-        //         script {
-        //             load('${APP_NAME}/ci/sonarQubeQualityGate.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('SonarQube Quality Gate') {
+            steps {
+                script {
+                    load('/ci/sonarQube.groovy').qualityGateCheck()
+                }
+            }
+        }
 
         // stage('Docker image build') {
         //     steps {
         //         script {
-        //             load('${APP_NAME}/ci/dockerImageBuild.groovy').run()
+        //             load('/ci/dockerImageBuild.groovy').run()
         //         }
         //     }
         // }
@@ -71,7 +71,7 @@ pipeline {
         // stage('Docker image push') {
         //     steps {
         //         script {
-        //             load('${APP_NAME}/ci/dockerImagePush.groovy').run()
+        //             load('/ci/dockerImagePush.groovy').run()
         //         }
         //     }
         // }
@@ -79,7 +79,7 @@ pipeline {
         // stage('Image Analysis') {
         //     steps {
         //         script {
-        //             load('${APP_NAME}/ci/imageAnalysis.groovy').run()
+        //             load('/ci/imageAnalysis.groovy').run()
         //         }
         //     }
         // }
@@ -87,7 +87,7 @@ pipeline {
         // stage('Modify Helm Repo') {
         //     steps {
         //         script {
-        //             load('${APP_NAME}/ci/modifyHelmRepo.groovy').run()
+        //             load('/ci/modifyHelmRepo.groovy').run()
         //         }
         //     }
         // }
@@ -95,7 +95,7 @@ pipeline {
         // stage('Argo Deploy') {
         //     steps {
         //         script {
-        //             load('${APP_NAME}/ci/argoDeploy.groovy').run()
+        //             load('/ci/argoDeploy.groovy').run()
         //         }
         //     }
         // }
