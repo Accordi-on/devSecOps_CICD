@@ -5,8 +5,8 @@ pipeline {
             JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "dev"
             GIT_URL         = "http://gitea.service.accordi-on.com/Accordi-on/${env.JOB_NAME}.git"
-            HARBOR_REGISTRY = "${env.HARBOR_URL}"
-            ARGOCD_URL      = "${env.ARGOCD_URL}"
+            HARBOR_REGISTRY = "http://harbor.service.accordi-on.com"
+            ARGOCD_URL      = "http://argocd.service.accordi-on.com"
             GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
