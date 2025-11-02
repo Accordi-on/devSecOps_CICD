@@ -18,6 +18,7 @@ def analysis() {
                   --exit-code 0 \
                   --severity HIGH,CRITICAL \
                   --timeout 5m \
+                  --insecure \
                   "\$IMAGE"
 
                 echo "📄 Trivy report (first 200 lines):"
