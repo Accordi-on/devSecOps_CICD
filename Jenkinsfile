@@ -14,14 +14,6 @@ pipeline {
             HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
-pipeline {
-    agent any
-
-    // 필요하면 여기서 env 정의
-    // environment {
-    //     APP_NAME = 'my-app'
-    // }
-
     stages {
         stage('Git Clone') {
             steps {
@@ -59,7 +51,7 @@ pipeline {
         stage('Build Test') {
             steps {
                 script {
-                    load('ci/buildTest.groovy').run("${APP_NAME}")
+                    load('${APP_NAME}/ci/buildTest.groovy').run("${APP_NAME}")
                 }
             }
         }
@@ -67,7 +59,7 @@ pipeline {
         stage('Dependency-Check') {
             steps {
                 script {
-                    load('ci/dependencyCheck.groovy').run()
+                    load('${APP_NAME}/ci/dependencyCheck.groovy').run()
                 }
             }
         }
@@ -75,7 +67,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    load('ci/sonarQubeAnalysis.groovy').run()
+                    load('${APP_NAME}/ci/sonarQubeAnalysis.groovy').run()
                 }
             }
         }
@@ -83,7 +75,7 @@ pipeline {
         stage('SonarQube Quality Gate') {
             steps {
                 script {
-                    load('ci/sonarQubeQualityGate.groovy').run()
+                    load('${APP_NAME}/ci/sonarQubeQualityGate.groovy').run()
                 }
             }
         }
@@ -91,7 +83,7 @@ pipeline {
         stage('Docker image build') {
             steps {
                 script {
-                    load('ci/dockerImageBuild.groovy').run()
+                    load('${APP_NAME}/ci/dockerImageBuild.groovy').run()
                 }
             }
         }
@@ -99,7 +91,7 @@ pipeline {
         stage('Docker image push') {
             steps {
                 script {
-                    load('ci/dockerImagePush.groovy').run()
+                    load('${APP_NAME}/ci/dockerImagePush.groovy').run()
                 }
             }
         }
@@ -107,7 +99,7 @@ pipeline {
         stage('Image Analysis') {
             steps {
                 script {
-                    load('ci/imageAnalysis.groovy').run()
+                    load('${APP_NAME}/ci/imageAnalysis.groovy').run()
                 }
             }
         }
@@ -115,7 +107,7 @@ pipeline {
         stage('Modify Helm Repo') {
             steps {
                 script {
-                    load('ci/modifyHelmRepo.groovy').run()
+                    load('${APP_NAME}/ci/modifyHelmRepo.groovy').run()
                 }
             }
         }
@@ -123,10 +115,11 @@ pipeline {
         stage('Argo Deploy') {
             steps {
                 script {
-                    load('ci/argoDeploy.groovy').run()
+                    load('${APP_NAME}/ci/argoDeploy.groovy').run()
                 }
             }
         }
+
     }
     post {
         success {
