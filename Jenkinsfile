@@ -56,7 +56,7 @@ pipeline {
         stage('SonarQube Quality Gate') {
             steps {
                 script {
-                    sonar.qualityGateCheck()
+                    sonar.qualityGateCheck() 
                 }
             }
         }
