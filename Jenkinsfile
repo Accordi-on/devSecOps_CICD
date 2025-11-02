@@ -1,6 +1,5 @@
 pipeline {
     agent { kubernetes { inheritFrom 'jenkins-agent-k8s' } }
-    options { skipDefaultCheckout(true) }
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
             BRANCH_NAME     = "main"
@@ -38,6 +37,7 @@ pipeline {
 
         stage('Checkout Branch') {
             steps {
+                checkout scm
                 echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
                 dir("${APP_NAME}") {
                     sh """
