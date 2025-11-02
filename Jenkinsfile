@@ -17,6 +17,7 @@ pipeline {
     stages {
         stage('Git Clone') {
             steps {
+                checkout scm
                 script {
                     def num = env.BUILD_NUMBER as Integer
                     def major = (num / 100).intValue()
@@ -25,25 +26,6 @@ pipeline {
 
                     env.IMAGE_TAG = "v${major}.${minor}.${patch}"
                     echo "📦 IMAGE_TAG = ${env.IMAGE_TAG}"
-                }
-
-                echo "🌐 [Git Clone] Cloning repository from ${env.GIT_URL}..."
-                sh """
-                    rm -rf ${APP_NAME} || true
-                    git clone ${GIT_URL} ${APP_NAME}
-                    echo "✅ [Git Clone] Repository cloned successfully."
-                """
-            }
-        }
-
-        stage('Checkout Branch') {
-            steps {
-                echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
-                dir("${APP_NAME}") {
-                    sh """
-                        git fetch origin ${BRANCH_NAME}
-                        git checkout ${BRANCH_NAME}
-                    """
                 }
             }
         }
