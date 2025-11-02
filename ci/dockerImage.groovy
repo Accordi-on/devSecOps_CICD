@@ -31,17 +31,20 @@ def push() {
         }
 
         container('crane') {
+            withEnv(["CRANE_INSECURE=1"]) {
             echo "📤 [Image Push] Pushing image to Harbor registry..."
             sh """
                 set -e
                 crane auth login ${env.HARBOR_REGISTRY} \
                     --username \$HARBOR_CREDENTIALS_USR \
                     --password \$HARBOR_CREDENTIALS_PSW
-
+                    --insecure
+                    
                 crane push /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar \
                     ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG}
             """
             echo "✅ [Image Push] Image pushed to ${env.HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${env.IMAGE_TAG}"
+            }
         }
     }
 }
