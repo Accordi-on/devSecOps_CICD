@@ -1,94 +1,16 @@
 pipeline {
-    agent {
-        kubernetes {
-            label 'jenkins-agent-k8s'
-            defaultContainer 'jnlp'
-            yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    some-label: jenkins-agent 
-spec:
-  containers:
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      args:
-      tty: true
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent/workspace
-        - name: system-ca
-          mountPath: /etc/ssl/certs/ca-certificates.crt
-          subPath: ca-certificates.crt
-
-    - name: kaniko
-      image: gcr.io/kaniko-project/executor:debug
-      command: ["sleep"]
-      args: ["infinity"]
-      tty: true
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent/workspace
-        - name: system-ca
-          mountPath: /etc/ssl/certs/ca-certificates.crt
-          subPath: ca-certificates.crt
-        - name: kaniko-docker-config
-          mountPath: /kaniko/.docker
-    - name: crane
-      image: gcr.io/go-containerregistry/crane:debug
-      command: ["sleep"]
-      args: ["infinity"]
-      tty: true
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent/workspace
-        - name: system-ca
-          mountPath: /etc/ssl/certs/ca-certificates.crt
-          subPath: ca-certificates.crt
-        - name: kaniko-docker-config
-          mountPath: /kaniko/.docker
-    - name: trivy
-      image: aquasec/trivy:latest
-      command: ["sleep"]
-      args: ["infinity"]
-      tty: true
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent/workspace
-        - name: system-ca
-          mountPath: /etc/ssl/certs/ca-certificates.crt
-          subPath: ca-certificates.crt
-  volumes:
-    - name: workspace-volume
-      emptyDir: {}
-    - name: system-ca
-      configMap:
-        name: system-ca
-    - name: kaniko-docker-config
-      projected:
-        sources:
-          - secret:
-              name: harbor-dockerconfig
-              items:
-                - key: .dockerconfigjson
-                  path: config.json
-"""           
-            }
-    }
-    options {
-        skipDefaultCheckout(true)
-    }
-
+    agent { kubernetes { inheritFrom 'jenkins-agent-k8s' } }
+    options { skipDefaultCheckout(true) }
     environment {
             JOB_NAME        = "${env.JOB_NAME}"
-            BRANCH_NAME     = "main"
-            GIT_URL         = "https://gitea.accordi-on.kro.kr/Accordi-on/${env.JOB_NAME}.git"
+            BRANCH_NAME     = "dev"
+            GIT_URL         = "${env.GIT_URL}"
+            HARBOR_REGISTRY = "${env.HARBOR_URL}"
+            ARGOCD_URL      = "${env.ARGOCD_URL}"
             GIT_CREDENTIALS = credentials("gitea-token")
             SONARQUBE_SERVER = 'SonarQube'
             APP_NAME        = "${env.JOB_NAME}"
             ARGOCD_CREDENTIALS = credentials('argocd-token')
-            HARBOR_REGISTRY = "harbor.accordi-on.kro.kr"
             HARBOR_PROJECT  = "${env.JOB_NAME}"
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
@@ -97,7 +19,6 @@ spec:
             steps {
                 script{
                     def num = env.BUILD_NUMBER as Integer
-                    // 3자리 버전 포맷
                     def major = (num / 100).intValue()
                     def minor = ((num % 100) / 10).intValue()
                     def patch = num % 10
@@ -112,8 +33,7 @@ spec:
                     echo "✅ [Git Clone] Repository cloned successfully."
                 """
             }
-        }
-        stage('Checkout Branch') {
+        }stage('Checkout Branch') {
             steps { 
                 echo "🌿 [Checkout] Checking out branch ${BRANCH_NAME}..."
                 dir("${APP_NAME}") {
@@ -123,237 +43,45 @@ spec:
                     """
                 }
             }
-        }
-
-        stage('Build Test') {
-            environment {
-                NODEJS_HOME = tool 'nodejs'
-            }
+        }stage('Build Test'){
             steps {
-                nodejs('nodejs') { 
-                echo '🧪 [Build Test] Running unit/lint tests...'
-                dir("${APP_NAME}") {
-                        sh '''
-                            npm ci
-                            npm test
-                        '''
-                }
-                }
-
+                script { load('ci/buildTest.groovy').run("${APP_NAME}") }
+            }
+        }stage('Dependency-Check'){
+            steps {
+                script { load('ci/dependencyCheck.groovy').run() }
             }
         }
-        // stage('Dependency-Check') {
-        //     steps {
-        //         dir("${APP_NAME}") {
-        //             dependencyCheck additionalArguments: ''' 
-        //                 -o "./" 
-        //                 -s "./"
-        //                 -f "ALL" 
-        //                 --prettyPrint''', odcInstallation: 'Dependency-Check'
-        //             dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-        //         }
-        //     }
-        // }
-
-        stage('SonarQube Analysis') { 
-            environment {
-                SCANNER_HOME = tool 'SonarQubeScanner'
-            }
+        stage('SonarQube Analysis'){
             steps {
-                echo '📊 [SonarQube] Running code analysis and sending results...'
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                    "${SCANNER_HOME}/bin/sonar-scanner" \
-                        -Dsonar.projectKey=${APP_NAME} \
-                        -Dsonar.projectName=${APP_NAME} \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN \
-                        -Dsonar.exclusions=helm/**,charts/**,**/templates/**,**/values.yaml
-                    '''
-                }
+                script { load('ci/sonarQubeAnalysis.groovy').run() }
             }
-        }
-
-        stage('SonarQube Quality Gate') {
+        }stage('SonarQube Quality Gate'){
             steps {
-                echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
+                script { load('ci/sonarQubeQualityGate.groovy').run() }
             }
-        }
-
-        stage('Docker image build') {
+        }stage('Docker image build'){
             steps {
-                container('kaniko') {
-                    echo "🐳 [Docker Build] Building Docker image for ${APP_NAME}:${IMAGE_TAG} ..."
-                    sh """
-                        /kaniko/executor \
-                            --context /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME} \
-                            --dockerfile /home/jenkins/agent/workspace/${JOB_NAME}/${APP_NAME}/Dockerfile \
-                            --no-push \
-                            --destination ${HARBOR_REGISTRY}/${JOB_NAME}/${APP_NAME}:${IMAGE_TAG} \
-                            --tarPath /home/jenkins/agent/workspace/${JOB_NAME}/image.tar
-                    """
-                    echo "✅ [Docker Build] Image build complete."
-                }
+                script { load('ci/dockerImageBuild.groovy').run() }
             }
-        }
-
-        stage('Docker image push') {
-            environment{
-                HARBOR_CREDENTIALS = credentials('harbor-credentials')
-            }
+        }stage('Docker image push'){
             steps {
-                container('jnlp'){ 
-                    sh '''
-                        curl -skf -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
-                        "https://${HARBOR_REGISTRY}/api/v2.0/projects/${HARBOR_PROJECT}" >/dev/null 2>&1 \\
-                        || curl -sk -X POST -u "$HARBOR_CREDENTIALS_USR:$HARBOR_CREDENTIALS_PSW" \\
-                        -H "Content-Type: application/json" \\
-                        -d '{ "project_name": "${HARBOR_PROJECT}", "public": false }' \\
-                        "https://${HARBOR_REGISTRY}/api/v2.0/projects"
-                    '''
-                    echo "✅ [Harbor Project] Verified or created project ${HARBOR_PROJECT} in Harbor."
-                }
-                container('crane') {
-                    echo "📤 [Image Push] Pushing image to Harbor registry..."
-                    sh '''
-                        crane auth login ${HARBOR_REGISTRY} \
-                            --username $HARBOR_CREDENTIALS_USR \
-                            --password $HARBOR_CREDENTIALS_PSW 
-                        crane push /home/jenkins/agent/workspace/${JOB_NAME}/image.tar ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}
-                    '''
-                    echo "✅ [Image Push] Image pushed to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-                }
+                script { load('ci/dockerImagePush.groovy').run() }
             }
-        }
-
-        stage('Image Analysis') {
-            environment{
-                HARBOR_CREDENTIALS = credentials('harbor-credentials')
-            }
+        }stage('Image Analysis'){
             steps {
-                container('trivy') {
-                    echo '🛡 [Anchore] Running container image security scan...'
-                    sh '''
-                        set -euo pipefail 
-
-                        IMAGE="${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}"
-                        REPORT="trivy-report.json"
-
-                        echo "🔐 Scanning image (private registry) with Trivy: $IMAGE"
-                        trivy image \
-                        --username "$HARBOR_CREDENTIALS_USR" \
-                        --password "$HARBOR_CREDENTIALS_PSW" \
-                        --format json \
-                        --output "$REPORT" \
-                        --exit-code 0 \
-                        --severity HIGH,CRITICAL \
-                        --timeout 5m \
-                        "$IMAGE" 
-
-                        echo "📄 Trivy report (first 200 lines):"
-                        if [ -f "$REPORT" ]; then
-                        head -n 200 "$REPORT" || true
-                        else
-                        echo "⚠️ No report generated."
-                        echo "❌ Treating this as a failure for safety."
-                        exit 1
-                        fi
-
-                        echo "🔎 Checking for HIGH or CRITICAL vulnerabilities in $IMAGE ..."
-                        if grep -q '"Severity":"CRITICAL"' "$REPORT" || grep -q '"Severity":"HIGH"' "$REPORT"; then
-                        echo "❌ HIGH/CRITICAL vulnerabilities found in $IMAGE"
-                        STATUS="fail"
-                        else
-                        echo "✅ No HIGH/CRITICAL vulnerabilities in $IMAGE"
-                        STATUS="pass"
-                        fi
-
-                        echo "IMAGE=${IMAGE}"            >  trivy-summary.txt
-                        echo "STATUS=${STATUS}"         >> trivy-summary.txt
-                        echo "REPORT_FILE=${REPORT}"    >> trivy-summary.txt
-
-                        cat trivy-summary.txt
-
-                        if [ "$STATUS" = "fail" ]; then
-                        exit 1
-                        fi
-
-                    '''
-                    
-                }
+                script { load('ci/imageAnalysis.groovy').run() }
             }
-        }
-
-        stage('Modify Helm Repo') {
+        }stage('Modify Helm Repo'){
             steps {
-                echo '📝 [Helm Repo] Updating Helm chart values (image.tag, etc.)...'
-                dir("${APP_NAME}/helm") {
-                        sh '''
-                            set -e
-
-                            echo '📝 [Helm Repo] Updating Helm chart values...'
-
-                            git checkout ${BRANCH_NAME}
-
-                            git fetch origin
-                            git pull origin ${BRANCH_NAME}
-
-                            sed -i "s|^  repository: .*|  repository: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}|" values.yaml
-                            sed -i "s|^  tag: .*|  tag: ${IMAGE_TAG}|" values.yaml
-
-                            echo '📝 [Git] Preparing commit...'
-                            git config user.name "jenkins-bot"
-                            git config user.email "jenkins-bot@accordi-on.kro.kr"
-
-                            git add values.yaml
-
-                            git commit -m "chore(ci): update image to ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${IMAGE_TAG}" || echo "no changes to commit"
-
-                            echo '🌿 [Git] Preparing prod branch...'
-
-                            git branch -f prod ${BRANCH_NAME}
-                            git checkout prod
-
-                            echo "🚀 [Git] Pushing prod branch to remote..."
-                            git push https://${GIT_CREDENTIALS_USR}:${GIT_CREDENTIALS_PSW}@gitea.accordi-on.kro.kr/Accordi-on/test.git prod --force
-
-                            echo "✅ [Helm Repo] values.yaml updated, committed, and pushed to prod."
-                        '''
-                }
-
+                script { load('ci/modifyHelmRepo.groovy').run() }
             }
-        }
-
-        stage('Argo Deploy') {
+        }stage('Argo Deploy'){
             steps {
-                echo "🚀 [Argo Deploy] Syncing ArgoCD app ${ARGOCD_APP} for deployment..."
-                sh '''
-                    if ! curl -sk -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
-                        ${ARGOCD_URL}/api/v1/projects/${ARGOCD_APP} >/dev/null 2>&1; then
-                        echo "⚠️ Project ${ARGOCD_APP} does not exist. Creating..."
-                        curl -sk -X POST -H "Authorization: Bearer $ARGOCD_TOKEN" \\
-                        -H "Content-Type: application/json" \\
-                        -d '{ "name": "${ARGOCD_APP}", "sourceRepos": ["*"],
-                                "destinations": [{ "server": "https://kubernetes.default.svc", "namespace": "default" }] }' \\
-                        "https://argocd.accordi-on.kro.kr/api/v1/projects"
-                    else
-                        echo "✅ Project ${ARGOCD_APP} already exists."
-                        # 여기서 application sync curl 실행
-                        curl -sk -X POST -H "Authorization: Bearer $ARGOCD_TOKEN" \\
-                        "https://argocd.accordi-on.kro.kr/api/v1/applications/${ARGOCD_APP}/sync"
-
-                    fi
-                    
-                '''
-                
+                script { load('ci/argoDeploy.groovy').run() }
             }
         }
     }
-
     post {
         success {
             echo "✅ [Post Actions] Pipeline for ${APP_NAME}:${IMAGE_TAG} completed successfully!"
