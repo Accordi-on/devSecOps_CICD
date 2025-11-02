@@ -47,8 +47,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def sonar = load('ci/sonarQube.groovy')
-                    sonar.sonarQubeAnalysis()
+                    load('ci/sonarQube.groovy').sonarQubeAnalysis()
                 }
             }
         }
@@ -56,7 +55,7 @@ pipeline {
         stage('SonarQube Quality Gate') {
             steps {
                 script {
-                    sonar.qualityGateCheck() 
+                    load('ci/sonarQube.groovy').qualityGateCheck() 
                 }
             }
         }
@@ -64,8 +63,7 @@ pipeline {
         stage('Docker image build') {
             steps {
                 script {
-                    def docker = load('ci/dockerImage.groovy')
-                    docker.build()
+                    load('ci/dockerImage.groovy').build()
                 }
             }
         }
@@ -73,7 +71,7 @@ pipeline {
         stage('Docker image push') {
             steps {
                 script {
-                    docker.push()
+                    load('ci/dockerImage.groovy').push()
                 }
             }
         }
