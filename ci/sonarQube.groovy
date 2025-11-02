@@ -9,7 +9,7 @@ def sonarQubeAnalysis() {
             -Dsonar.sources=. \
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_AUTH_TOKEN \
-            -Dsonar.exclusions=helm/**,charts/**,**/templates/**,**/values.yaml,${APP_NAME}/dependency-check-report/** \
+            -Dsonar.exclusions=helm/**,charts/**,**/templates/**,**/values.yaml,${APP_NAME}/dependency-check-report/**
         """
     }
 }

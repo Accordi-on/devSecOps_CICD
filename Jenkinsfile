@@ -50,7 +50,7 @@ pipeline {
             }
             steps {
                 echo '📊 [SonarQube] Running code analysis and sending results...'
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('sonarqube') {
                     sh '''
                     "${SCANNER_HOME}/bin/sonar-scanner" \
                         -Dsonar.projectKey=${APP_NAME} \
