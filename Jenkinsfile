@@ -47,7 +47,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    load('ci/sonarQube.groovy').sonarQubeAnalysis()
+                    sonar = load 'ci/sonarQube.groovy'
+                    sonar.sonarQubeAnalysis()
                 }
             }
         }
@@ -55,7 +56,7 @@ pipeline {
         stage('SonarQube Quality Gate') {
             steps {
                 script {
-                    load('ci/sonarQube.groovy').qualityGateCheck()
+                    sonar.qualityGateCheck()
                 }
             }
         }
