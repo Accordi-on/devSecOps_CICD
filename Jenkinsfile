@@ -14,7 +14,7 @@ pipeline {
             ARGOCD_APP      = "${env.JOB_NAME}"
     }
     stages {
-        stage('Checkout') {
+        stage('Image Tag') {
             steps {
                 script {
                     def num = env.BUILD_NUMBER as Integer
@@ -25,9 +25,6 @@ pipeline {
                     env.IMAGE_TAG = "v${major}.${minor}.${patch}"
                     echo "📦 IMAGE_TAG = ${env.IMAGE_TAG}"
                 }
-                sh '''
-                    git checkout ${BRANCH_NAME}
-                '''
             }
         }
 
@@ -39,13 +36,13 @@ pipeline {
             }
         }
 
-        // stage('Dependency-Check') {
-        //     steps {
-        //         script {
-        //             load('${APP_NAME}/ci/dependencyCheck.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('Dependency-Check') {
+            steps {
+                script {
+                    load('ci/dependencyCheck.groovy').run()
+                }
+            }
+        }
 
         // stage('SonarQube Analysis') {
         //     steps {
