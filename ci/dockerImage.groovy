@@ -14,7 +14,7 @@ def build() {
 }
 
 def push() {
-    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_CREDENTIALS_USR', passwordVariable: 'HARBOR_CREDENTIALS_PSW')]) {
+    withCredentials([usernamePassword(credentialsId: 'harbor-token', usernameVariable: 'HARBOR_CREDENTIALS_USR', passwordVariable: 'HARBOR_CREDENTIALS_PSW')]) {
 
         container('jnlp') {
             echo "🔍 [Harbor Project] Checking project ${env.HARBOR_PROJECT} existence..."
