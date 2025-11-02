@@ -53,3 +53,5 @@ def analysis() {
     }
 
 }
+
+return this
