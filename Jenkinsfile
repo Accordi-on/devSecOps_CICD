@@ -44,48 +44,39 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') { 
-            environment {
-                SCANNER_HOME = tool 'SonarQubeScanner'
-            }
+        stage('SonarQube Analysis') {
             steps {
-                echo '📊 [SonarQube] Running code analysis and sending results...'
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                    "${SCANNER_HOME}/bin/sonar-scanner" \
-                        -Dsonar.projectKey=${APP_NAME} \
-                        -Dsonar.projectName=${APP_NAME} \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=$SONAR_HOST_URL \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN \
-                        -Dsonar.exclusions=helm/**,charts/**,**/templates/**,**/values.yaml,${APP_NAME}/dependency-check-report/** 
-                    '''
+                script {
+                    sonar = load 'ci/sonarQube.groovy'
+                    sonar.sonarQubeAnalysis()
                 }
             }
         }
+
         stage('SonarQube Quality Gate') {
             steps {
-                echo '🚦 [Quality Gate] Waiting for SonarQube quality gate status...'
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
+                script {
+                    sonar.qualityGateCheck() 
                 }
             }
         }
-        // stage('Docker image build') {
-        //     steps {
-        //         script {
-        //             load('ci/dockerImageBuild.groovy').run()
-        //         }
-        //     }
-        // }
 
-        // stage('Docker image push') {
-        //     steps {
-        //         script {
-        //             load('ci/dockerImagePush.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('Docker image build') {
+            steps {
+                script {
+                    docker = load('ci/dockerImage.groovy')
+                    docker.build()
+                }
+            }
+        }
+
+        stage('Docker image push') {
+            steps {
+                script {
+                    docker.push()
+                }
+            }
+        }
 
         // stage('Image Analysis') {
         //     steps {

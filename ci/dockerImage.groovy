@@ -1,0 +1,50 @@
+def build() {
+    container('kaniko') {
+        echo "🐳 [Docker Build] Building Docker image for ${env.APP_NAME}:${env.IMAGE_TAG} ..."
+        sh """
+            /kaniko/executor \
+                --context /home/jenkins/agent/workspace/${env.JOB_NAME}/${env.APP_NAME} \
+                --dockerfile /home/jenkins/agent/workspace/${env.JOB_NAME}/${env.APP_NAME}/Dockerfile \
+                --no-push \
+                --destination ${env.HARBOR_REGISTRY}/${env.JOB_NAME}/${env.APP_NAME}:${env.IMAGE_TAG} \
+                --tarPath /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar
+        """
+        echo "✅ [Docker Build] Image build complete."
+    }
+}
+
+def push() {
+    // Harbor credentials는 Jenkins Credentials Binding에서 받아옴
+    withCredentials([usernamePassword(credentialsId: 'harbor-credentials', usernameVariable: 'HARBOR_CREDENTIALS_USR', passwordVariable: 'HARBOR_CREDENTIALS_PSW')]) {
+
+        container('jnlp') {
+            echo "🔍 [Harbor Project] Checking project ${env.HARBOR_PROJECT} existence..."
+            sh """
+                set -e
+                curl -skf -u "\$HARBOR_CREDENTIALS_USR:\$HARBOR_CREDENTIALS_PSW" \
+                    "https://${env.HARBOR_REGISTRY}/api/v2.0/projects/${env.HARBOR_PROJECT}" >/dev/null 2>&1 \
+                || curl -sk -X POST -u "\$HARBOR_CREDENTIALS_USR:\$HARBOR_CREDENTIALS_PSW" \
+                    -H "Content-Type: application/json" \
+                    -d '{ "project_name": "${env.HARBOR_PROJECT}", "public": false }' \
+                    "https://${env.HARBOR_REGISTRY}/api/v2.0/projects"
+            """
+            echo "✅ [Harbor Project] Verified or created project ${env.HARBOR_PROJECT}."
+        }
+
+        container('crane') {
+            echo "📤 [Image Push] Pushing image to Harbor registry..."
+            sh """
+                set -e
+                crane auth login ${env.HARBOR_REGISTRY} \
+                    --username \$HARBOR_CREDENTIALS_USR \
+                    --password \$HARBOR_CREDENTIALS_PSW
+
+                crane push /home/jenkins/agent/workspace/${env.JOB_NAME}/image.tar \
+                    ${env.HARBOR_REGISTRY}/${env.HARBOR_PROJECT}/${env.APP_NAME}:${env.IMAGE_TAG}
+            """
+            echo "✅ [Image Push] Image pushed to ${env.HARBOR_REGISTRY}/${env.HARBOR_PROJECT}/${env.APP_NAME}:${env.IMAGE_TAG}"
+        }
+    }
+}
+
+return this
