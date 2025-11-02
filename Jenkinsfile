@@ -47,7 +47,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    def sonar = load 'ci/sonarQube.groovy'
+                    def sonar = load('ci/sonarQube.groovy')
                     sonar.sonarQubeAnalysis()
                 }
             }
