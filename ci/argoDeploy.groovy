@@ -24,7 +24,7 @@ def deploy(){
                 -H "Authorization: Bearer \${ARGOCD_TOKEN}" \
                 -d '{
                     "metadata": {
-                    "name": "'"${env.APP_NAME}"'",
+                    "name": "'"${env.PROJECT_NAME}-${env.SERVICE_NAME}"'",
                     "namespace": "argocd"
                     },
                     "spec": {
@@ -56,8 +56,8 @@ def deploy(){
             set -e
             echo "🚀 [ArgoCD] Deploying application: ${env.APP_NAME}"
             curl -sk -X POST \\
-            -H "Authorization: Bearer ${ARGOCD_TOKEN}" \\
-            ${env.ARGOCD_URL}/api/v1/applications/${env.APP_NAME}/sync
+            -H "Authorization: Bearer \${ARGOCD_TOKEN}" \\
+            ${env.ARGOCD_URL}/api/v1/applications/${env.PROJECT_NAME}-${env.SERVICE_NAME}/sync
         """
     }
 
