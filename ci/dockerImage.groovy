@@ -24,7 +24,7 @@ def push() {
                     "http://${env.HARBOR_REGISTRY}/api/v2.0/projects/${env.PROJECT_NAME}" >/dev/null 2>&1 \
                 || curl -sk -X POST -u "\$HARBOR_CREDENTIALS_USR:\$HARBOR_CREDENTIALS_PSW" \
                     -H "Content-Type: application/json" \
-                    -d '{ "project_name": "${env.PROJECT_NAME}", "public": false }' \
+                    -d '{ "project_name": "${env.PROJECT_NAME}", "public": true }' \
                     "http://${env.HARBOR_REGISTRY}/api/v2.0/projects"
             """
             echo "✅ [Harbor Project] Verified or created project ${env.PROJECT_NAME}."
