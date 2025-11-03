@@ -29,3 +29,5 @@ def gitPush() {
         """
     }
 }
+
+return this
