@@ -1,7 +1,7 @@
 pipeline {
     agent { kubernetes { inheritFrom 'jenkins-agent-k8s' } }
     environment {
-            BRANCH_NAME     = "main"
+            BRANCH_NAME     = "dev"
             GIT_URL         = "http://gitea.service.accordi-on.com/Accordi-on/${env.JOB_NAME}.git"
             HARBOR_REGISTRY = "harbor.service.accordi-on.com"
             ARGOCD_URL      = "http://argocd.service.accordi-on.com"

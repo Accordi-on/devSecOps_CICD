@@ -10,7 +10,7 @@ def gitPush() {
             git pull origin main
 
             echo '🔀 [Git] Merge dev -> main ...'
-            git merge origin/dev --no-edit || true
+            git merge origin/${env.BRANCH_NAME} --no-edit || true
 
             echo '📝 [Helm Repo] Updating Helm chart values...'
             sed -i "s|^  repository: .*|  repository: ${HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}|" values.yaml
@@ -22,11 +22,12 @@ def gitPush() {
 
             git add values.yaml
 
-            git commit -m "chore(ci): merge dev into main & update image to ${HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${IMAGE_TAG}" \
+            git commit -m "chore(ci): merge ${env.BRANCH_NAME} into main & update image to ${HARBOR_REGISTRY}/${env.PROJECT_NAME}/${env.SERVICE_NAME}:${IMAGE_TAG}" \
             || echo "ℹ️ no changes to commit"
 
             echo "🚀 [Git] Pushing main to remote..."
             git push http://${GIT_USER}:${GIT_PASS}@gitea.service.accordi-on.com/Accordi-on/${env.APP_NAME}.git main
+            git checkout ${env.BRANCH_NAME}
         """
         }
     }
