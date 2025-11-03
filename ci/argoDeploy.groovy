@@ -51,15 +51,14 @@ def deploy(){
                 }' \
                 ${env.ARGOCD_URL}/api/v1/applications
             """
-        }else{
-            sh """
-                set -e
-                echo "🚀 [ArgoCD] Deploying application: ${env.APP_NAME}"
-                curl -sk -X POST \\
-                -H "Authorization: Bearer ${ARGOCD_TOKEN}" \\
-                ${env.ARGOCD_URL}/api/v1/applications/${env.APP_NAME}/sync
-            """
         }
+        sh """
+            set -e
+            echo "🚀 [ArgoCD] Deploying application: ${env.APP_NAME}"
+            curl -sk -X POST \\
+            -H "Authorization: Bearer ${ARGOCD_TOKEN}" \\
+            ${env.ARGOCD_URL}/api/v1/applications/${env.APP_NAME}/sync
+        """
     }
 
 }
