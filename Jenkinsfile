@@ -98,13 +98,13 @@ pipeline {
             }
         }
 
-        // stage('Argo Deploy') {
-        //     steps {
-        //         script {
-        //             load('ci/argoDeploy.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('Argo Deploy') {
+            steps {
+                script {
+                    load('ci/argoDeploy.groovy').deploy()
+                }
+            }
+        }
 
     }
     post {
