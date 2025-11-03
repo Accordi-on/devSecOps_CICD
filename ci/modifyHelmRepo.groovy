@@ -1,6 +1,6 @@
 def gitPush() {
     dir("helm") {
-            withCredentials([usernamePassword(credentialsId: 'gitea-creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+            withCredentials([usernamePassword(credentialsId: 'gitea-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
                 sh '''#!/bin/bash
             set -e
 
