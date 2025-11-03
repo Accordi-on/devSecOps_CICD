@@ -17,7 +17,6 @@ function App() {
           rel="noopener noreferrer"
         >
           Learn React
-          배포  테스트
         </a>
       </header>
     </div>
