@@ -90,13 +90,13 @@ pipeline {
             }
         }
 
-        // stage('Modify Helm Repo') {
-        //     steps {
-        //         script {
-        //             load('ci/modifyHelmRepo.groovy').run()
-        //         }
-        //     }
-        // }
+        stage('Modify Helm Repo') {
+            steps {
+                script {
+                    load('ci/modifyHelmRepo.groovy').gitPush()
+                }
+            }
+        }
 
         // stage('Argo Deploy') {
         //     steps {
