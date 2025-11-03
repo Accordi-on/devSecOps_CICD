@@ -1,5 +1,5 @@
 def gitPush() {
-    dir("${APP_NAME}/helm") {
+    dir("helm") {
         sh """
             set -e
 
