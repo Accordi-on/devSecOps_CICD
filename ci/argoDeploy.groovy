@@ -1,5 +1,5 @@
-def deploy(){
-        withCredentials([string(credentialsId: 'argocd-token', variable: 'ARGOCD_TOKEN')]) {
+def deploy(){   
+    withCredentials([string(credentialsId: 'argocd-token', variable: 'ARGOCD_TOKEN')]) {
         def exists = sh(
               script: """
                 set -e
