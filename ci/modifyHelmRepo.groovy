@@ -23,9 +23,9 @@ def gitPush() {
             echo '📝 [Git] Commit...'
             git add values.yaml
             git commit -m "chore(ci): merge ${env.BRANCH_NAME} into main & update image to ${HARBOR_REGISTRY}//${env.PROJECT_NAME}/${env.SERVICE_NAME}:${IMAGE_TAG}"
-            
+
             echo '🚀 [Git] Push main...'
-            git push http://"\${GIT_USER}":"\${GIT_PASS}"@gitea.service.accordi-on.com/Accordi-on/${env.PROJECT_NAME}.git main
+            git push http://"\${GIT_USER}":"\${GIT_PASS}"@gitea.service.accordi-on.com/Accordi-on/${env.APP_NAME}.git main
             """
 
 
