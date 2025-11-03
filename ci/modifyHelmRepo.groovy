@@ -26,7 +26,7 @@ def gitPush() {
             || echo "ℹ️ no changes to commit"
 
             echo "🚀 [Git] Pushing main to remote..."
-            git push http://${GIT_USER}:${GIT_PASS}@gitea.accordi-on.kro.kr/Accordi-on/${env.APP_NAME}.git main
+            git push http://${GIT_USER}:${GIT_PASS}@gitea.service.accordi-on.com/Accordi-on/${env.APP_NAME}.git main
         """
         }
     }
