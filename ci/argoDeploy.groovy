@@ -57,6 +57,7 @@ def deploy(){
             echo "🚀 [ArgoCD] Deploying application: ${env.APP_NAME}"
             curl -sk -X POST \\
             -H "Authorization: Bearer \${ARGOCD_TOKEN}" \\
+            -H "Content-Type: application/json" \\
             ${env.ARGOCD_URL}/api/v1/applications/${env.PROJECT_NAME}-${env.SERVICE_NAME}/sync
         """
     }
