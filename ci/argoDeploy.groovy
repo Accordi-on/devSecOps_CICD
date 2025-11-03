@@ -30,7 +30,7 @@ def deploy(){
                     "spec": {
                     "project": "default",
                     "source": {
-                        "repoURL": "http://gitea.service.accordi-on.com/Accordi-on/"${env.APP_NAME}".git",
+                        "repoURL": "http://gitea.service.accordi-on.com/Accordi-on/${env.APP_NAME}.git",
                         "targetRevision": "main",
                         "path": "helm"
                     },
