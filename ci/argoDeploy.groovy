@@ -4,7 +4,7 @@ def deploy(){
               script: """
                 set -e
                 curl -sk -o /dev/null -w "%{http_code}" \
-                  -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
+                  -H "Authorization: Bearer \${ARGOCD_TOKEN}" \
                   ${env.ARGOCD_URL}/api/v1/applications/${env.APP_NAME}
                 """,
               returnStdout: true
@@ -21,7 +21,7 @@ def deploy(){
 
                 curl -sk -X POST \
                 -H "Content-Type: application/json" \
-                -H "Authorization: Bearer ${ARGOCD_TOKEN}" \
+                -H "Authorization: Bearer \${ARGOCD_TOKEN}" \
                 -d '{
                     "metadata": {
                     "name": "'"${env.APP_NAME}"'",

@@ -27,8 +27,6 @@ def gitPush() {
             echo '🚀 [Git] Push main...'
             git push http://"\${GIT_USER}":"\${GIT_PASS}"@gitea.service.accordi-on.com/Accordi-on/${env.APP_NAME}.git main
             """
-
-
             }
 
     }
