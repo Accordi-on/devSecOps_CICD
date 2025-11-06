@@ -16,11 +16,11 @@ Gitea → Jenkins → SonarQube → Harbor → ArgoCD로 이어지는 자동화 
 - ArgoCD (GitOps 배포)  
 ## 🏗 시스템 아키텍처(사진)
 
-![System](./images/devSecOps.png)
+![System](./images/devSecOps.jpg)
 
 ---
 
-![System](./images/cicd.png)
+![System](./images/cicd.jpg)
 
 ---
 ## 🏗 시스템 아키텍처  
