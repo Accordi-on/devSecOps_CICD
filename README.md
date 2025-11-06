@@ -14,7 +14,15 @@ Gitea → Jenkins → SonarQube → Harbor → ArgoCD로 이어지는 자동화 
 - SonarQube, OWASP Dependency-Check, Trivy (코드·이미지 보안 검사)  
 - Harbor (이미지 레지스트리)  
 - ArgoCD (GitOps 배포)  
+## 🏗 시스템 아키텍처(사진)
 
+![System](./images/devSecOps.png)
+
+---
+
+![System](./images/cicd.png)
+
+---
 ## 🏗 시스템 아키텍처  
 ```text
 Gitea (SCM)
