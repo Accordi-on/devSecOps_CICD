@@ -29,7 +29,7 @@ Kubernetes Cluster (Auto Deploy via Helm)
    ├─ MetalLB (LoadBalancer IP)  
    ├─ Ingress Controller (NGINX)  
    └─ Rancher (모니터링·관리)
-
+```
 
 ## 🚀 실행 결과
 
