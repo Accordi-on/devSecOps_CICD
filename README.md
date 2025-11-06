@@ -43,7 +43,7 @@ Kubernetes Cluster (Auto Deploy via Helm)
 ### 🧩 ArgoCD (CD)
 ![ArgoCD Sync Result](./images/argocd.png)
 > Jenkins에서 Harbor로 이미지 푸시 후, ArgoCD가 Helm Chart를 통해  
-> Kubernetes 클러스터에 자동 배포 및 Sync 완료.  
+> Kubernetes 클러스터에 자동 배포 및 Sync 완료.   
 > 상태: **Healthy / Synced**
 
 ---
