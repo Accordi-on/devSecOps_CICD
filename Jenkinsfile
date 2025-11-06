@@ -77,7 +77,7 @@ pipeline {
         stage('Docker image push') {
             steps {
                 script {
-                    load('ci/dockerImage.groovy').push()
+                    load('ci/dockerImage.groovy').push() 
                 }
             }
         }
