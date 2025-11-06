@@ -29,3 +29,26 @@ Kubernetes Cluster (Auto Deploy via Helm)
    ├─ MetalLB (LoadBalancer IP)  
    ├─ Ingress Controller (NGINX)  
    └─ Rancher (모니터링·관리)
+
+
+## 🚀 실행 결과
+
+### ✅ Jenkins Pipeline (CI)
+![Jenkins Pipeline Result](./images/jenkins.png)
+> Gitea → Jenkins → SonarQube → Trivy → Harbor → ArgoCD  
+> 코드 푸시부터 배포까지 약 **3분 이내**에 자동 처리되는 CI/CD 파이프라인.
+
+---
+
+### 🧩 ArgoCD (CD)
+![ArgoCD Sync Result](./images/argocd.png)
+> Jenkins에서 Harbor로 이미지 푸시 후, ArgoCD가 Helm Chart를 통해  
+> Kubernetes 클러스터에 자동 배포 및 Sync 완료.  
+> 상태: **Healthy / Synced**
+
+---
+
+### 🌐 실제 서비스 배포 확인
+![Deployed Service](./images/deploy_site.png)
+> 도메인: **[accordi-on.com](https://accordi-on.com)**  
+> React 프론트엔드가 정상적으로 배포되어 접속 가능한 상태.
